@@ -25,7 +25,7 @@ export default function Header() {
       <div className={styles.inner + " container"}>
         <Link href="/login" className={styles.brand}>
           <span className={styles.logo} aria-hidden>⚽</span>
-          <span>Lega Cittadina</span>
+          <span>LCS</span>
         </Link>
         <nav className={styles.nav}>
           <Link href="/login" className={styles.link}>Login</Link>
