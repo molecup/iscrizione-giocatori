@@ -1,0 +1,91 @@
+"use client";
+import { useEffect, useState } from "react";
+import styles from "./page.module.css";
+import PlayerTable from "../components/PlayerTable";
+import Modal from "../components/Modal";
+import { getTeamApi, updatePlayersApi, requestRemovalApi } from "../lib/mockApi";
+
+export default function DashboardPage() {
+  const [loading, setLoading] = useState(true);
+  const [teamName, setTeamName] = useState("");
+  const [registerLink, setRegisterLink] = useState("");
+  const [players, setPlayers] = useState([]);
+  const [showInvite, setShowInvite] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [removal, setRemoval] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getTeamApi();
+        setTeamName(data.teamName);
+        setRegisterLink(data.registerLink);
+        setPlayers(data.players);
+      } catch (e) {
+        alert("Errore caricamento dati squadra");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const saveChanges = async () => {
+    setSaving(true);
+    try {
+      await updatePlayersApi(players);
+      alert("Modifiche salvate");
+    } catch (e) {
+      alert("Errore salvataggio");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const requestRemoval = async (player) => {
+    setRemoval(player);
+  };
+
+  const confirmRemoval = async () => {
+    try {
+      await requestRemovalApi(removal.id);
+      alert("Richiesta inviata alla lega");
+    } catch (e) {
+      alert("Errore invio richiesta");
+    } finally {
+      setRemoval(null);
+    }
+  };
+
+  if (loading) return <p>Caricamento...</p>;
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.header + " card"}>
+        <div>
+          <h2>{teamName}</h2>
+          <p className={styles.muted}>Gestione rosa giocatori</p>
+        </div>
+        <div className={styles.actions}>
+          <button className="button secondary" onClick={()=> setShowInvite(true)}>➕ Aggiungi giocatore</button>
+          <button className="button" onClick={saveChanges} disabled={saving}>{saving ? "Salvataggio..." : "Salva modifiche"}</button>
+        </div>
+      </div>
+
+      <PlayerTable players={players} setPlayers={setPlayers} onRequestRemoval={requestRemoval} />
+
+      <Modal open={showInvite} onClose={()=> setShowInvite(false)} title="Link invito registrazione">
+        <p>Copia e invia il seguente link ai giocatori per registrarsi:</p>
+        <div className={styles.inviteBox}>
+          <code>{registerLink}</code>
+          <button className="button secondary" onClick={()=>{ navigator.clipboard.writeText(registerLink); alert("Link copiato"); }}>Copia</button>
+        </div>
+      </Modal>
+
+      <Modal open={!!removal} onClose={()=> setRemoval(null)} title="Richiesta rimozione giocatore"
+             actions={<button className="button" onClick={confirmRemoval}>Invia richiesta</button>}>
+        <p>Sei sicuro di voler richiedere la rimozione di {removal?.nome} {removal?.cognome}?</p>
+        <p className={styles.muted}>La lega valuterà la richiesta e ti contatterà.</p>
+      </Modal>
+    </div>
+  );
+}

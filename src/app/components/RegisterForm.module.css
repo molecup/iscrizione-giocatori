@@ -1,0 +1,16 @@
+.form {
+  padding: 16px;
+}
+.section { margin-bottom: 18px; }
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field { display: flex; flex-direction: column; gap: 6px; }
+.error { color: #dc2626; font-size: 12px; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+@media (max-width: 640px) {
+  .grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,38 @@
+.header {
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+.logo {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-radius: 8px;
+}
+.nav {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+}
+.link {
+  color: var(--foreground);
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+.link:hover { background: var(--hover); }

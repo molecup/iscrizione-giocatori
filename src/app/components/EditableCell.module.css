@@ -1,0 +1,12 @@
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--foreground);
+}
+.checkbox {
+  width: 18px;
+  height: 18px;
+}

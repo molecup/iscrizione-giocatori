@@ -1,0 +1,5 @@
+.page { display: flex; flex-direction: column; gap: 16px; }
+.header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; }
+.muted { color: var(--muted); }
+.actions { display: flex; gap: 8px; }
+.inviteBox { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 8px; }

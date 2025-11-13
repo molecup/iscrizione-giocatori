@@ -1,0 +1,13 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--foreground);
+}
+.link {
+  background: none;
+  border: 0;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}

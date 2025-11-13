@@ -1,0 +1,5 @@
+.wrapper { display: flex; justify-content: center; }
+.form { width: 100%; max-width: 420px; margin-top: 32px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.subtitle { color: var(--muted); margin-bottom: 8px; }
+.error { color: #dc2626; font-size: 12px; }

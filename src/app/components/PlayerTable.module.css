@@ -1,0 +1,6 @@
+.wrapper {
+  overflow-x: auto;
+}
+.sortable {
+  cursor: pointer;
+}
