@@ -1,0 +1,50 @@
+.viewport {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+}
+
+.toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 10px 12px;
+  min-width: 220px;
+  transform: translateY(-8px);
+  opacity: 0;
+  transition: transform .25s ease, opacity .25s ease;
+}
+
+.visible { opacity: 1; transform: translateY(0); }
+.hidden { opacity: 0; transform: translateY(-8px); }
+
+.icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.success { border-color: #16a34a; }
+.error { border-color: #dc2626; }
+.warn { border-color: #f59e0b; }
+
+.close {
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+}
