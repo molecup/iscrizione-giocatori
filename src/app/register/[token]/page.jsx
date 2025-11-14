@@ -1,18 +1,65 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import RegisterForm from "../../components/RegisterForm";
 import PaymentButton from "../../components/PaymentButton";
 import styles from "./page.module.css";
+import { getEmailFromTokenApi, registerAccountApi } from "../../lib/mockApi";
+import { useToast } from "../../components/ToastProvider";
 
 export default function RegisterPage() {
   const { token } = useParams();
-  const [step, setStep] = useState("form");
+  const toast = useToast();
+  const [step, setStep] = useState("account");
   const [data, setData] = useState(null);
 
-  const handleSubmit = (formData) => {
+  // Phase 1 state (account creation)
+  const [accountEmail, setAccountEmail] = useState("");
+  const [accountPassword, setAccountPassword] = useState("");
+  const [loadingPrefill, setLoadingPrefill] = useState(true);
+  const [submittingAccount, setSubmittingAccount] = useState(false);
+  const [accErrors, setAccErrors] = useState({});
+
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const res = await getEmailFromTokenApi(token);
+        if (!ignore) setAccountEmail(res?.email || "");
+      } catch (e) {
+        // silent: keep empty
+      } finally {
+        if (!ignore) setLoadingPrefill(false);
+      }
+    })();
+    return () => { ignore = true; };
+  }, [token]);
+
+  const validateAccount = () => {
+    const e = {};
+    if (!accountEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail)) e.email = "Email non valida";
+    if (!accountPassword || accountPassword.length < 6) e.password = "Minimo 6 caratteri";
+    setAccErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const submitAccount = async (e) => {
+    e.preventDefault();
+    if (!validateAccount()) return;
+    setSubmittingAccount(true);
+    try {
+      await registerAccountApi({ token, email: accountEmail, password: accountPassword });
+      setStep("player");
+    } catch (err) {
+      toast.error("Registrazione fallita: " + err.message);
+    } finally {
+      setSubmittingAccount(false);
+    }
+  };
+
+  const handlePlayerSubmit = (formData) => {
     setData(formData);
-    setStep("summary");
+    setStep("payment");
   };
 
   const handlePaid = () => {
@@ -22,17 +69,59 @@ export default function RegisterPage() {
   return (
     <div className={styles.wrapper}>
       <div className={"card " + styles.card}>
-        {step === "form" && (
+        {step === "account" && (
           <>
-            <h2>Registrazione giocatore</h2>
+            <h2>Creazione account</h2>
             <p className={styles.subtitle}>Token invito: <code>{token}</code></p>
-            <RegisterForm onSubmit={handleSubmit} />
+            <form onSubmit={submitAccount} className={styles.formAccount}>
+              <label className={styles.field}>
+                <span className="label">Email</span>
+                <input
+                  className="input"
+                  type="email"
+                  value={accountEmail}
+                  onChange={(e)=>setAccountEmail(e.target.value)}
+                  required
+                  readOnly={loadingPrefill}
+                />
+                {accErrors.email && <span className={styles.error}>{accErrors.email}</span>}
+              </label>
+              <label className={styles.field}>
+                <span className="label">Password</span>
+                <input
+                  className="input"
+                  type="password"
+                  value={accountPassword}
+                  onChange={(e)=>setAccountPassword(e.target.value)}
+                  required
+                />
+                {accErrors.password && <span className={styles.error}>{accErrors.password}</span>}
+              </label>
+              <div className={styles.actions}>
+                <button className="button" type="submit" disabled={submittingAccount}>
+                  {submittingAccount ? "Creazione..." : "Crea account"}
+                </button>
+              </div>
+            </form>
           </>
         )}
 
-        {step === "summary" && (
+        {step === "player" && (
           <>
-            <h2>Riepilogo iscrizione</h2>
+            <h2>Dati giocatore</h2>
+            <p className={styles.subtitle}>L'email è precompilata dall'invito e non può essere modificata.</p>
+            <RegisterForm
+              onSubmit={handlePlayerSubmit}
+              initialEmail={accountEmail}
+              emailReadOnly
+              initialData={data}
+            />
+          </>
+        )}
+
+        {step === "payment" && data && (
+          <>
+            <h2>Pagamento</h2>
             <p className={styles.subtitle}>Controlla i dati prima del pagamento.</p>
             <div className={styles.summaryGrid}>
               <SummaryRow label="Email" value={data.email} />
@@ -44,7 +133,6 @@ export default function RegisterPage() {
               <SummaryRow label="Taglia" value={data.taglia} />
               <SummaryRow label="Posizione" value={data.posizione} />
               {data.privacy && <SummaryRow label="Privacy" value="Accettata" />}
-              {/* Genitore se minorenne */}
               {data.genitoreNome || data.genitoreCognome ? (
                 <>
                   <SummaryRow label="Nome genitore" value={data.genitoreNome} />
@@ -55,7 +143,7 @@ export default function RegisterPage() {
               ) : null}
             </div>
             <div className={styles.actions}>
-              <button className="button secondary" onClick={()=> setStep("form")}>Indietro</button>
+              <button className="button secondary" onClick={()=> setStep("player")}>Indietro</button>
               <PaymentButton amount={25} onSuccess={handlePaid} />
             </div>
           </>

@@ -1,6 +1,9 @@
 .wrapper { display: flex; justify-content: center; }
 .card { width: 100%; max-width: 800px; padding: 18px; }
 .subtitle { color: var(--muted); margin-bottom: 8px; }
+.formAccount { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.error { color: #dc2626; font-size: 12px; }
 .summaryGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 12px 0; }
 .row { display: contents; }
 .label { color: var(--muted); }

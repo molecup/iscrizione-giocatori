@@ -1,8 +1,10 @@
 "use client";
 import styles from "./PaymentButton.module.css";
 import { createCheckoutSessionMock } from "../lib/mockApi";
+import { useToast } from "./ToastProvider";
 
 export default function PaymentButton({ amount = 25, onSuccess }) {
+  const toast = useToast();
   const handlePay = async () => {
     try {
       const res = await createCheckoutSessionMock(amount * 100);
@@ -14,7 +16,7 @@ export default function PaymentButton({ amount = 25, onSuccess }) {
         onSuccess?.();
       }, 800);
     } catch (e) {
-      alert("Pagamento non disponibile: " + e.message);
+      toast.error("Pagamento non disponibile: " + e.message);
     }
   };
 

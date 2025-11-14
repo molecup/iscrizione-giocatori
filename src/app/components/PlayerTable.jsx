@@ -45,16 +45,16 @@ export default function PlayerTable({ players, setPlayers, onRequestRemoval }) {
           {sorted.map(p => (
             <tr key={p.id}>
               <td>
-                <EditableCell value={p.nome} onChange={(v)=>updateField(p.id,'nome',v)} placeholder="Nome" />
+                <span>{p.nome}</span>
               </td>
               <td>
-                <EditableCell value={p.cognome} onChange={(v)=>updateField(p.id,'cognome',v)} placeholder="Cognome" />
+                <span>{p.cognome}</span>
               </td>
               <td>
-                <EditableCell value={p.email} onChange={(v)=>updateField(p.id,'email',v)} type="email" placeholder="email@example.com" />
+                <span>{p.email}</span>
               </td>
               <td>
-                <EditableCell value={p.nascita} onChange={(v)=>updateField(p.id,'nascita',v)} type="date" />
+                <span>{p.nascita}</span>
               </td>
               <td>
                 <EditableCell value={p.numero} onChange={(v)=>updateField(p.id,'numero',Number(v))} type="number" min={1} max={99} />
@@ -66,7 +66,7 @@ export default function PlayerTable({ players, setPlayers, onRequestRemoval }) {
                 <EditableCell value={p.posizione} onChange={(v)=>updateField(p.id,'posizione',v)} type="select" options={POSIZIONI} placeholder="Posizione" />
               </td>
               <td style={{textAlign:'center'}}>
-                <EditableCell value={p.pagato} onChange={(v)=>updateField(p.id,'pagato',v)} type="checkbox" />
+                <input type="checkbox" checked={!!p.pagato} disabled aria-label="Quota pagata" />
               </td>
               <td>
                 <button className="button secondary" onClick={()=>onRequestRemoval?.(p)}>Richiedi rimozione</button>

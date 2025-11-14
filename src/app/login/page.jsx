@@ -3,9 +3,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { loginApi } from "../lib/mockApi";
+import { useToast } from "../components/ToastProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ export default function LoginPage() {
       await loginApi({ email, password });
       router.push("/dashboard");
     } catch (err) {
-      alert("Login fallito: " + err.message);
+      toast.error("Login fallito: " + err.message);
     } finally {
       setLoading(false);
     }

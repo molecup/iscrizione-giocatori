@@ -4,8 +4,10 @@ import styles from "./page.module.css";
 import PlayerTable from "../components/PlayerTable";
 import Modal from "../components/Modal";
 import { getTeamApi, updatePlayersApi, requestRemovalApi } from "../lib/mockApi";
+import { useToast } from "../components/ToastProvider";
 
 export default function DashboardPage() {
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [teamName, setTeamName] = useState("");
   const [registerLink, setRegisterLink] = useState("");
@@ -22,7 +24,7 @@ export default function DashboardPage() {
         setRegisterLink(data.registerLink);
         setPlayers(data.players);
       } catch (e) {
-        alert("Errore caricamento dati squadra");
+        toast.error("Errore caricamento dati squadra");
       } finally {
         setLoading(false);
       }
@@ -33,9 +35,9 @@ export default function DashboardPage() {
     setSaving(true);
     try {
       await updatePlayersApi(players);
-      alert("Modifiche salvate");
+      toast.success("Modifiche salvate");
     } catch (e) {
-      alert("Errore salvataggio");
+      toast.error("Errore salvataggio");
     } finally {
       setSaving(false);
     }
@@ -48,9 +50,9 @@ export default function DashboardPage() {
   const confirmRemoval = async () => {
     try {
       await requestRemovalApi(removal.id);
-      alert("Richiesta inviata alla lega");
+      toast.success("Richiesta inviata alla lega");
     } catch (e) {
-      alert("Errore invio richiesta");
+      toast.error("Errore invio richiesta");
     } finally {
       setRemoval(null);
     }
@@ -77,7 +79,16 @@ export default function DashboardPage() {
         <p>Copia e invia il seguente link ai giocatori per registrarsi:</p>
         <div className={styles.inviteBox}>
           <code>{registerLink}</code>
-          <button className="button secondary" onClick={()=>{ navigator.clipboard.writeText(registerLink); alert("Link copiato"); }}>Copia</button>
+          <button
+            className="button secondary"
+            onClick={()=>{
+              navigator.clipboard.writeText(registerLink)
+                .then(()=> toast.success("Link copiato"))
+                .catch(()=> toast.error("Impossibile copiare"));
+            }}
+          >
+            Copia
+          </button>
         </div>
       </Modal>
 
