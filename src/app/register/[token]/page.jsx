@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import RegisterForm from "../../components/RegisterForm";
 import PaymentButton from "../../components/PaymentButton";
 import styles from "./page.module.css";
@@ -9,6 +9,7 @@ import { useToast } from "../../components/ToastProvider";
 
 export default function RegisterPage() {
   const { token } = useParams();
+  const searchParams = useSearchParams();
   const toast = useToast();
   const [step, setStep] = useState("account");
   const [data, setData] = useState(null);
@@ -34,6 +35,19 @@ export default function RegisterPage() {
     })();
     return () => { ignore = true; };
   }, [token]);
+
+  // Handle return from Stripe (success/cancel)
+  useEffect(() => {
+    const paid = searchParams?.get("paid");
+    const canceled = searchParams?.get("canceled");
+    if (paid === "1") {
+      setStep("done");
+    } else if (canceled === "1") {
+      // If coming back after cancel, stay on payment step
+      setStep("payment");
+      toast.error("Pagamento annullato");
+    }
+  }, [searchParams, toast]);
 
   const validateAccount = () => {
     const e = {};
@@ -144,7 +158,17 @@ export default function RegisterPage() {
             </div>
             <div className={styles.actions}>
               <button className="button secondary" onClick={()=> setStep("player")}>Indietro</button>
-              <PaymentButton amount={25} onSuccess={handlePaid} />
+              <PaymentButton
+                amount={50}
+                onSuccess={handlePaid}
+                customerEmail={data.email}
+                metadata={{
+                  token,
+                  nome: data.nome,
+                  cognome: data.cognome,
+                  cf: data.cf,
+                }}
+              />
             </div>
           </>
         )}
