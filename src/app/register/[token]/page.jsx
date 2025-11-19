@@ -13,6 +13,8 @@ export default function RegisterPage() {
   const toast = useToast();
   const [step, setStep] = useState("account");
   const [data, setData] = useState(null);
+  const [confirmingSession, setConfirmingSession] = useState(false);
+  const [confirmError, setConfirmError] = useState(null);
 
   // Phase 1 state (account creation)
   const [accountEmail, setAccountEmail] = useState("");
@@ -38,12 +40,31 @@ export default function RegisterPage() {
 
   // Handle return from Stripe (success/cancel)
   useEffect(() => {
-    const paid = searchParams?.get("paid");
+    const sessionId = searchParams?.get("session_id");
     const canceled = searchParams?.get("canceled");
-    if (paid === "1") {
-      setStep("done");
+    if (sessionId) {
+      setConfirmError(null);
+      setConfirmingSession(true);
+      (async () => {
+        try {
+          const resp = await fetch("/api/checkout/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: sessionId }),
+          });
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err?.error || "Pagamento non verificato");
+          }
+          setStep("done");
+        } catch (err) {
+          setConfirmError(err.message || "Impossibile verificare il pagamento");
+          toast.error("Conferma pagamento fallita");
+        } finally {
+          setConfirmingSession(false);
+        }
+      })();
     } else if (canceled === "1") {
-      // If coming back after cancel, stay on payment step
       setStep("payment");
       toast.error("Pagamento annullato");
     }
@@ -123,7 +144,7 @@ export default function RegisterPage() {
         {step === "player" && (
           <>
             <h2>Dati giocatore</h2>
-            <p className={styles.subtitle}>L'email è precompilata dall'invito e non può essere modificata.</p>
+            <p className={styles.subtitle}>L&apos;email è precompilata dall&apos;invito e non può essere modificata.</p>
             <RegisterForm
               onSubmit={handlePlayerSubmit}
               initialEmail={accountEmail}
@@ -156,12 +177,14 @@ export default function RegisterPage() {
                 </>
               ) : null}
             </div>
+            {confirmError && <p className={styles.error}>{confirmError}</p>}
             <div className={styles.actions}>
               <button className="button secondary" onClick={()=> setStep("player")}>Indietro</button>
               <PaymentButton
-                amount={50}
+                amount={0.5}
                 onSuccess={handlePaid}
                 customerEmail={data.email}
+                disabled={confirmingSession}
                 metadata={{
                   token,
                   nome: data.nome,
@@ -170,13 +193,14 @@ export default function RegisterPage() {
                 }}
               />
             </div>
+            {confirmingSession && <p className={styles.subtitle}>Verifica pagamento in corso...</p>}
           </>
         )}
 
         {step === "done" && (
           <div className={styles.success}>
             <h2>Iscrizione completata con successo</h2>
-            <p>Riceverai una email di conferma con i dettagli dell'iscrizione.</p>
+            <p>Riceverai una email di conferma con i dettagli dell&apos;iscrizione.</p>
           </div>
         )}
       </div>

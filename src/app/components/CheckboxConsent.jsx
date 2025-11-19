@@ -11,7 +11,7 @@ export default function CheckboxConsent({ checked, onChange, onOpenDoc }) {
         onChange={(e)=> onChange?.(e.target.checked)}
       />
       <span>
-        Dichiaro di aver letto e accettato l'informativa privacy. {" "}
+        Dichiaro di aver letto e accettato l&apos;informativa privacy. {" "}
         {onOpenDoc ? (
           <button type="button" className={styles.link} onClick={onOpenDoc}>Leggi documento</button>
         ) : (

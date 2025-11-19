@@ -9,43 +9,31 @@ const POSIZIONI = ["POR", "DIF", "CEN", "ATT"];
 
 export default function RegisterForm({ onSubmit, initialEmail = "", emailReadOnly = false, initialData = null }) {
   const toast = useToast();
-  const [form, setForm] = useState({
-    email: "",
-    nome: "",
-    cognome: "",
-    nascita: "",
-    cf: "",
-    numero: "",
-    taglia: "",
-    posizione: "",
-    privacy: false,
-    genitoreNome: "",
-    genitoreCognome: "",
-    genitoreNascita: "",
-    genitoreCf: "",
-  });
+  const buildInitialForm = () => {
+    const base = {
+      email: initialEmail || "",
+      nome: "",
+      cognome: "",
+      nascita: "",
+      cf: "",
+      numero: "",
+      taglia: "",
+      posizione: "",
+      privacy: false,
+      genitoreNome: "",
+      genitoreCognome: "",
+      genitoreNascita: "",
+      genitoreCf: "",
+    };
+    if (!initialData) return base;
+    return {
+      ...base,
+      ...initialData,
+      ...(emailReadOnly ? { email: initialEmail || initialData.email || "" } : {}),
+    };
+  };
+  const [form, setForm] = useState(buildInitialForm);
   const [errors, setErrors] = useState({});
-  const hydratedFromProps = useRef(false);
-
-  // Prefill email from props when provided/changed
-  useEffect(() => {
-    if (initialEmail && form.email !== initialEmail) {
-      setForm((f) => ({ ...f, email: initialEmail }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialEmail]);
-
-  // One-time hydration from initialData (used when returning from Payment step)
-  useEffect(() => {
-    if (!initialData || hydratedFromProps.current) return;
-    const { email, ...rest } = initialData || {};
-    setForm((f) => ({
-      ...f,
-      ...(emailReadOnly ? rest : (initialData || {})),
-    }));
-    hydratedFromProps.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialData, emailReadOnly]);
 
   // Data odierna in formato YYYY-MM-DD per vincoli sugli input date
   const todayStr = useMemo(() => {

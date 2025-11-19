@@ -17,7 +17,7 @@ export async function POST(request) {
     } catch (_) {
       body = {};
     }
-    const amount = Number(body?.amount) || 5000; // default 50.00€
+    const amount = Number(body?.amount) || 60; // default 50.00€
     const currency = (body?.currency || "eur").toLowerCase();
     const metadata = (body && body.metadata) || undefined;
     const customerEmail = typeof body?.customer_email === "string" ? body.customer_email : undefined;
@@ -37,11 +37,11 @@ export async function POST(request) {
     const match = referer.match(/\/register\/([^/?#]+)/);
     if (match && match[1]) {
       const token = match[1];
-      successUrl = `${origin}/register/${token}?paid=1`;
+      successUrl = `${origin}/register/${token}?session_id={CHECKOUT_SESSION_ID}`;
       cancelUrl = `${origin}/register/${token}?canceled=1`;
     } else {
       // Fallback generic URLs
-      successUrl = `${origin}/?checkout=success`;
+      successUrl = `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
       cancelUrl = `${origin}/?checkout=canceled`;
     }
 

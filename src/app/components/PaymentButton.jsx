@@ -4,7 +4,7 @@ import { useToast } from "./ToastProvider";
 import { useState } from "react";
 
 
-export default function PaymentButton({ amount = 50, onSuccess, customerEmail, metadata }) {
+export default function PaymentButton({ amount = 50, onSuccess, customerEmail, metadata, disabled = false }) {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
   const handlePay = async () => {
@@ -42,7 +42,7 @@ export default function PaymentButton({ amount = 50, onSuccess, customerEmail, m
   };
 
   return (
-    <button className={styles.pay + " button"} onClick={handlePay} disabled={loading}>
+    <button className={styles.pay + " button"} onClick={handlePay} disabled={loading || disabled}>
       {loading ? "Reindirizzamento..." : "Paga quota"}
       <span className={styles.amount}>{amount.toFixed(2)} €</span>
     </button>

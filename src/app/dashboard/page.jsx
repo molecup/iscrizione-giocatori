@@ -29,7 +29,7 @@ export default function DashboardPage() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [toast]);
 
   const saveChanges = async () => {
     setSaving(true);
