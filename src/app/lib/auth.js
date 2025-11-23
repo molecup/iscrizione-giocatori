@@ -1,5 +1,5 @@
 "use server"
-import {createSession, verifySession } from './sessions';
+import {createSession, verifySession, deleteSession } from './sessions';
 import { redirect } from 'next/navigation';
 
 
@@ -21,8 +21,6 @@ export async function registerAccountApi({ token, email, password }) {
     });
   if (!res.ok) {
     const err = await res.json();
-    console.log(err);
-    /* take alla values in err and join them */
     const errorMessage = Object.values(err).flat().join(", ");
     throw new Error(errorMessage || "Errore sconosciuto");
   }
@@ -38,8 +36,9 @@ export async function login({ email, password }, redirectOnSuccess = true) {
         },
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error || "Login fall ito");
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
     }
     const data = await res.json();
     const userId = data.user.id;
@@ -65,8 +64,9 @@ export async function logout() {
         },
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error || "Logout fallito");
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Logout fallito");
     }
     await deleteSession();
     redirect('/login');

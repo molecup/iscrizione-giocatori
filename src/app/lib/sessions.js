@@ -45,7 +45,7 @@ export const verifySession = cache(async () => {
   const cookie = (await cookies()).get('session')?.value
   const session = await decrypt(cookie)
  
-  if (!session.userId || new Date(session.expiresAt) < new Date()) {
+  if (!session?.userId || new Date(session?.expiresAt) < new Date()) {
     redirect('/login')
   }
  
