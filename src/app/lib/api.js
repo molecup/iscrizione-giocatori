@@ -70,7 +70,6 @@ export async function updatePlayers(updatedPlayers) {
         }),
     });
     if (!res.ok) {
-        console.log(res);
         const err = await res.json();
         const errorMessage = Object.values(err).flat().join(", ");
         throw new Error(errorMessage || "Errore sconosciuto");
