@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import { loginApi } from "../lib/mockApi";
+// import { loginApi } from "../lib/mockApi";
+import { login as loginApi } from "../lib/auth";
 import { useToast } from "../components/ToastProvider";
 
 export default function LoginPage() {

@@ -1,74 +1,39 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import RegisterForm from "../../components/RegisterForm";
-import PaymentButton from "../../components/PaymentButton";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import styles from "./page.module.css";
-import { getEmailFromTokenApi, registerAccountApi } from "../../lib/mockApi";
-import { useToast } from "../../components/ToastProvider";
+// import { getEmailFromTokenApi } from "../../lib/mockApi";
+import { registerAccountApi, login } from "@app/lib/auth";
+import { useToast } from "@app/components/ToastProvider";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const { token } = useParams();
-  const searchParams = useSearchParams();
+  const router = useRouter();
   const toast = useToast();
-  const [step, setStep] = useState("account");
-  const [data, setData] = useState(null);
-  const [confirmingSession, setConfirmingSession] = useState(false);
-  const [confirmError, setConfirmError] = useState(null);
+  
 
   // Phase 1 state (account creation)
   const [accountEmail, setAccountEmail] = useState("");
   const [accountPassword, setAccountPassword] = useState("");
-  const [loadingPrefill, setLoadingPrefill] = useState(true);
+  // const [loadingPrefill, setLoadingPrefill] = useState(true);
   const [submittingAccount, setSubmittingAccount] = useState(false);
   const [accErrors, setAccErrors] = useState({});
 
-  useEffect(() => {
-    let ignore = false;
-    (async () => {
-      try {
-        const res = await getEmailFromTokenApi(token);
-        if (!ignore) setAccountEmail(res?.email || "");
-      } catch (e) {
-        // silent: keep empty
-      } finally {
-        if (!ignore) setLoadingPrefill(false);
-      }
-    })();
-    return () => { ignore = true; };
-  }, [token]);
-
-  // Handle return from Stripe (success/cancel)
-  useEffect(() => {
-    const sessionId = searchParams?.get("session_id");
-    const canceled = searchParams?.get("canceled");
-    if (sessionId) {
-      setConfirmError(null);
-      setConfirmingSession(true);
-      (async () => {
-        try {
-          const resp = await fetch("/api/checkout/confirm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ session_id: sessionId }),
-          });
-          if (!resp.ok) {
-            const err = await resp.json().catch(() => ({}));
-            throw new Error(err?.error || "Pagamento non verificato");
-          }
-          setStep("done");
-        } catch (err) {
-          setConfirmError(err.message || "Impossibile verificare il pagamento");
-          toast.error("Conferma pagamento fallita");
-        } finally {
-          setConfirmingSession(false);
-        }
-      })();
-    } else if (canceled === "1") {
-      setStep("payment");
-      toast.error("Pagamento annullato");
-    }
-  }, [searchParams, toast]);
+  // useEffect(() => {
+  //   let ignore = true;
+  //   (async () => {
+  //     try {
+  //       const res = await getEmailFromTokenApi(token);
+  //       if (!ignore) setAccountEmail(res?.email || "");
+  //     } catch (e) {
+  //       // silent: keep empty
+  //     } finally {
+  //       if (!ignore) setLoadingPrefill(false);
+  //     }
+  //   })();
+  //   return () => { ignore = true; };
+  // }, [token]);
 
   const validateAccount = () => {
     const e = {};
@@ -84,7 +49,11 @@ export default function RegisterPage() {
     setSubmittingAccount(true);
     try {
       await registerAccountApi({ token, email: accountEmail, password: accountPassword });
-      setStep("player");
+      toast.success("Account creato con successo!");
+      const login_status = await login({ email: accountEmail, password: accountPassword }, false);
+      console.log("Login status after registration:", login_status);
+      if (login_status.ok && login_status.isPlayer)
+         router.push("/profile");
     } catch (err) {
       toast.error("Registrazione fallita: " + err.message);
     } finally {
@@ -92,19 +61,9 @@ export default function RegisterPage() {
     }
   };
 
-  const handlePlayerSubmit = (formData) => {
-    setData(formData);
-    setStep("payment");
-  };
-
-  const handlePaid = () => {
-    setStep("done");
-  };
-
   return (
     <div className={styles.wrapper}>
       <div className={"card " + styles.card}>
-        {step === "account" && (
           <>
             <h2>Creazione account</h2>
             <p className={styles.subtitle}>Token invito: <code>{token}</code></p>
@@ -117,7 +76,7 @@ export default function RegisterPage() {
                   value={accountEmail}
                   onChange={(e)=>setAccountEmail(e.target.value)}
                   required
-                  readOnly={loadingPrefill}
+                  // readOnly={loadingPrefill}
                 />
                 {accErrors.email && <span className={styles.error}>{accErrors.email}</span>}
               </label>
@@ -139,80 +98,7 @@ export default function RegisterPage() {
               </div>
             </form>
           </>
-        )}
-
-        {step === "player" && (
-          <>
-            <h2>Dati giocatore</h2>
-            <p className={styles.subtitle}>L&apos;email è precompilata dall&apos;invito e non può essere modificata.</p>
-            <RegisterForm
-              onSubmit={handlePlayerSubmit}
-              initialEmail={accountEmail}
-              emailReadOnly
-              initialData={data}
-            />
-          </>
-        )}
-
-        {step === "payment" && data && (
-          <>
-            <h2>Pagamento</h2>
-            <p className={styles.subtitle}>Controlla i dati prima del pagamento.</p>
-            <div className={styles.summaryGrid}>
-              <SummaryRow label="Email" value={data.email} />
-              <SummaryRow label="Nome" value={data.nome} />
-              <SummaryRow label="Cognome" value={data.cognome} />
-              <SummaryRow label="Data di nascita" value={data.nascita} />
-              <SummaryRow label="Codice fiscale" value={data.cf} />
-              <SummaryRow label="Numero maglia" value={data.numero} />
-              <SummaryRow label="Taglia" value={data.taglia} />
-              <SummaryRow label="Posizione" value={data.posizione} />
-              {data.privacy && <SummaryRow label="Privacy" value="Accettata" />}
-              {data.genitoreNome || data.genitoreCognome ? (
-                <>
-                  <SummaryRow label="Nome genitore" value={data.genitoreNome} />
-                  <SummaryRow label="Cognome genitore" value={data.genitoreCognome} />
-                  <SummaryRow label="Data di nascita genitore" value={data.genitoreNascita} />
-                  <SummaryRow label="Codice fiscale genitore" value={data.genitoreCf} />
-                </>
-              ) : null}
-            </div>
-            {confirmError && <p className={styles.error}>{confirmError}</p>}
-            <div className={styles.actions}>
-              <button className="button secondary" onClick={()=> setStep("player")}>Indietro</button>
-              <PaymentButton
-                amount={0.5}
-                onSuccess={handlePaid}
-                customerEmail={data.email}
-                disabled={confirmingSession}
-                metadata={{
-                  token,
-                  nome: data.nome,
-                  cognome: data.cognome,
-                  cf: data.cf,
-                }}
-              />
-            </div>
-            {confirmingSession && <p className={styles.subtitle}>Verifica pagamento in corso...</p>}
-          </>
-        )}
-
-        {step === "done" && (
-          <div className={styles.success}>
-            <h2>Iscrizione completata con successo</h2>
-            <p>Riceverai una email di conferma con i dettagli dell&apos;iscrizione.</p>
-          </div>
-        )}
       </div>
-    </div>
-  );
-}
-
-function SummaryRow({ label, value }) {
-  return (
-    <div className={styles.row}>
-      <div className={styles.label}>{label}</div>
-      <div className={styles.value}>{value}</div>
     </div>
   );
 }
