@@ -66,15 +66,6 @@ export async function createCheckoutSessionMock(amountCents = 2500) {
   return { ok: true, url: "https://checkout.stripe.com/pay/test_mock" };
 }
 
-// Prefill an email address starting from an invitation token
-export async function getEmailFromTokenApi(token) {
-  await delay(250);
-  if (!token) return { email: "" };
-  // Simple mock strategy: known demo token → nice email, otherwise derive one
-  if (token === "abc123") return { email: "invito.abc123@example.com" };
-  return { email: `${String(token)}@example.com` };
-}
-
 export async function getUserData() {
     const session = await verifySession();
     const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/";

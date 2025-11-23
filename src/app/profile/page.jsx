@@ -4,8 +4,6 @@ import { useParams, useSearchParams } from "next/navigation";
 import RegisterForm from "@app/components/RegisterForm";
 import PaymentButton from "@app/components/PaymentButton";
 import styles from "./page.module.css";
-import { getEmailFromTokenApi } from "@app/lib/mockApi";
-// import { registerAccountApi } from "@app/lib/auth";
 import { useToast } from "@app/components/ToastProvider";
 import { getUserData, updateSinglePlayer } from "@app/lib/api";
 
@@ -37,38 +35,26 @@ export default function RegisterPage() {
   const [backDisabled, setBackDisabled] = useState(false);
 
   // Phase 1 state (account creation)
-  const [accountEmail, setAccountEmail] = useState("");
-  // const [accountPassword, setAccountPassword] = useState("");
-  // const [loadingPrefill, setLoadingPrefill] = useState(true);
-  // const [submittingAccount, setSubmittingAccount] = useState(false);
-  // const [accErrors, setAccErrors] = useState({});
 
-  // useEffect(() => {
-  //   let ignore = false;
-  //   (async () => {
-  //     try {
-  //       const res = await getEmailFromTokenApi(token);
-  //       if (!ignore) setAccountEmail(res?.email || "");
-  //     } catch (e) {
-  //       // silent: keep empty
-  //     } finally {
-  //       if (!ignore) setLoadingPrefill(false);
-  //     }
-  //   })();
-  //   return () => { ignore = true; };
-  // }, [token]);
+  const [loadingPrefill, setLoadingPrefill] = useState(true);
 
   // Fetch user data to prefill the form
   useEffect(() => {
     (async () => {
-      const userData = await getUserData();
-      setData({
-        ...userData.formData
-      });
-      if (userData.info.is_complete) {
-        setStep("payment");
+      try {
+        const userData = await getUserData();
+        setData({
+          ...userData.formData
+        });
+        if (userData.info.is_complete) {
+          setStep("payment");
+        }
+        setBackDisabled(!userData.info.can_edit);
+      } catch (error) {
+        toast.error("Errore nel caricamento dati: " + error.message);
+      } finally {
+        setLoadingPrefill(false);
       }
-      setBackDisabled(!userData.info.can_edit);
     })();
   }, []);
 

@@ -9,29 +9,29 @@ const POSIZIONI = ["POR", "DIF", "CEN", "ATT"];
 
 export default function RegisterForm({ onSubmit, emailReadOnly = false, form, setForm }) {
   const toast = useToast();
-  const buildInitialForm = () => {
-    const base = {
-      email: initialEmail || "",
-      nome: "",
-      cognome: "",
-      nascita: "",
-      cf: "",
-      numero: "",
-      taglia: "",
-      posizione: "",
-      privacy: false,
-      genitoreNome: "",
-      genitoreCognome: "",
-      genitoreNascita: "",
-      genitoreCf: "",
-    };
-    if (!initialData) return base;
-    return {
-      ...base,
-      ...initialData,
-      ...(emailReadOnly ? { email: initialEmail || initialData.email || "" } : {}),
-    };
-  };
+  // const buildInitialForm = () => {
+  //   const base = {
+  //     email: initialEmail || "",
+  //     nome: "",
+  //     cognome: "",
+  //     nascita: "",
+  //     cf: "",
+  //     numero: "",
+  //     taglia: "",
+  //     posizione: "",
+  //     privacy: false,
+  //     genitoreNome: "",
+  //     genitoreCognome: "",
+  //     genitoreNascita: "",
+  //     genitoreCf: "",
+  //   };
+  //   if (!initialData) return base;
+  //   return {
+  //     ...base,
+  //     ...initialData,
+  //     ...(emailReadOnly ? { email: initialEmail || initialData.email || "" } : {}),
+  //   };
+  // };
   // const [form, setForm] = useState(buildInitialForm);
   const [errors, setErrors] = useState({});
 
