@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import styles from "./Header.module.css";
+import {logout} from "@app/lib/auth"
 
 export default function Header() {
     const [dark, setDark] = useState(false);
@@ -38,8 +39,11 @@ export default function Header() {
                 </Link>
                 <nav className={styles.nav}>
                     <Link href="/login" className={styles.link}>Login</Link>
+                    <Link href="/profile" className={styles.link}>Profile</Link>
                     <Link href="/dashboard" className={styles.link}>Dashboard</Link>
                     <Link href="/privacy" className={styles.link}>Privacy</Link>
+                    <Link href="/login" className={styles.link} onClick={logout}>Log Out</Link>
+
                     <button className="button secondary" onClick={() => setDark(v => !v)} aria-pressed={dark}>
                         {dark ? "Light" : "Dark"} mode
                     </button>
