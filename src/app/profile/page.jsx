@@ -1,43 +1,76 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import RegisterForm from "@app/components/RegisterForm";
 import PaymentButton from "@app/components/PaymentButton";
 import styles from "./page.module.css";
 import { getEmailFromTokenApi } from "@app/lib/mockApi";
-import { registerAccountApi } from "@app/lib/auth";
+// import { registerAccountApi } from "@app/lib/auth";
 import { useToast } from "@app/components/ToastProvider";
+import { getUserData, updateSinglePlayer } from "@app/lib/api";
 
 export default function RegisterPage() {
-  const { token } = useParams();
+  // const { token } = useParams();
+
+  const initialData = {
+  email: "",
+  nome: "",
+  cognome: "",
+  nascita: "",
+  cf: "",
+  numero: "",
+  taglia: "",
+  posizione: "",
+  privacy: false,
+  genitoreNome: "",
+  genitoreCognome: "",
+  genitoreNascita: "",
+  genitoreCf: "",
+};
+
   const searchParams = useSearchParams();
   const toast = useToast();
   const [step, setStep] = useState("player");
-  const [data, setData] = useState(null);
+  const [data, setData] = useState(initialData);
   const [confirmingSession, setConfirmingSession] = useState(false);
   const [confirmError, setConfirmError] = useState(null);
+  const [backDisabled, setBackDisabled] = useState(false);
 
   // Phase 1 state (account creation)
   const [accountEmail, setAccountEmail] = useState("");
-  const [accountPassword, setAccountPassword] = useState("");
-  const [loadingPrefill, setLoadingPrefill] = useState(true);
-  const [submittingAccount, setSubmittingAccount] = useState(false);
-  const [accErrors, setAccErrors] = useState({});
+  // const [accountPassword, setAccountPassword] = useState("");
+  // const [loadingPrefill, setLoadingPrefill] = useState(true);
+  // const [submittingAccount, setSubmittingAccount] = useState(false);
+  // const [accErrors, setAccErrors] = useState({});
 
+  // useEffect(() => {
+  //   let ignore = false;
+  //   (async () => {
+  //     try {
+  //       const res = await getEmailFromTokenApi(token);
+  //       if (!ignore) setAccountEmail(res?.email || "");
+  //     } catch (e) {
+  //       // silent: keep empty
+  //     } finally {
+  //       if (!ignore) setLoadingPrefill(false);
+  //     }
+  //   })();
+  //   return () => { ignore = true; };
+  // }, [token]);
+
+  // Fetch user data to prefill the form
   useEffect(() => {
-    let ignore = false;
     (async () => {
-      try {
-        const res = await getEmailFromTokenApi(token);
-        if (!ignore) setAccountEmail(res?.email || "");
-      } catch (e) {
-        // silent: keep empty
-      } finally {
-        if (!ignore) setLoadingPrefill(false);
+      const userData = await getUserData();
+      setData({
+        ...userData.formData
+      });
+      if (userData.info.is_complete) {
+        setStep("payment");
       }
+      setBackDisabled(!userData.info.can_edit);
     })();
-    return () => { ignore = true; };
-  }, [token]);
+  }, []);
 
   // Handle return from Stripe (success/cancel)
   useEffect(() => {
@@ -71,31 +104,36 @@ export default function RegisterPage() {
     }
   }, [searchParams, toast]);
 
-  const validateAccount = () => {
-    const e = {};
-    if (!accountEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail)) e.email = "Email non valida";
-    if (!accountPassword || accountPassword.length < 6) e.password = "Minimo 6 caratteri";
-    setAccErrors(e);
-    return Object.keys(e).length === 0;
-  };
+  // const validateAccount = () => {
+  //   const e = {};
+  //   if (!accountEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail)) e.email = "Email non valida";
+  //   if (!accountPassword || accountPassword.length < 6) e.password = "Minimo 6 caratteri";
+  //   setAccErrors(e);
+  //   return Object.keys(e).length === 0;
+  // };
 
-  const submitAccount = async (e) => {
-    e.preventDefault();
-    if (!validateAccount()) return;
-    setSubmittingAccount(true);
+  // const submitAccount = async (e) => {
+  //   e.preventDefault();
+  //   if (!validateAccount()) return;
+  //   setSubmittingAccount(true);
+  //   try {
+  //     await registerAccountApi({ token, email: accountEmail, password: accountPassword });
+  //     setStep("player");
+  //   } catch (err) {
+  //     toast.error("Registrazione fallita: " + err.message);
+  //   } finally {
+  //     setSubmittingAccount(false);
+  //   }
+  // };
+
+  const handlePlayerSubmit = async (formData, isMinor) => {
+    // setData(formData);
     try {
-      await registerAccountApi({ token, email: accountEmail, password: accountPassword });
-      setStep("player");
-    } catch (err) {
-      toast.error("Registrazione fallita: " + err.message);
-    } finally {
-      setSubmittingAccount(false);
+      await updateSinglePlayer(formData, isMinor);
+      setStep("payment");
+    } catch (error) {
+      toast.error("Errore: " + error.message);
     }
-  };
-
-  const handlePlayerSubmit = (formData) => {
-    setData(formData);
-    setStep("payment");
   };
 
   const handlePaid = () => {
@@ -111,9 +149,11 @@ export default function RegisterPage() {
             <p className={styles.subtitle}>L&apos;email è precompilata dall&apos;invito e non può essere modificata.</p>
             <RegisterForm
               onSubmit={handlePlayerSubmit}
-              initialEmail={accountEmail}
+              // initialEmail={accountEmail}
+              form={data}
+              setForm={setData}
               emailReadOnly
-              initialData={data}
+              // initialData={data}
             />
           </>
         )}
@@ -143,14 +183,14 @@ export default function RegisterPage() {
             </div>
             {confirmError && <p className={styles.error}>{confirmError}</p>}
             <div className={styles.actions}>
-              <button className="button secondary" onClick={()=> setStep("player")}>Indietro</button>
+              <button className="button secondary" onClick={()=> setStep("player") } disabled={backDisabled}>Indietro e modifica</button>
               <PaymentButton
                 amount={0.5}
                 onSuccess={handlePaid}
                 customerEmail={data.email}
                 disabled={confirmingSession}
                 metadata={{
-                  token,
+                  // token,
                   nome: data.nome,
                   cognome: data.cognome,
                   cf: data.cf,

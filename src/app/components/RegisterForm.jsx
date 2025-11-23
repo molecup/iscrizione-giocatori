@@ -7,7 +7,7 @@ import { useToast } from "./ToastProvider";
 const TAGLIE = ["S", "M", "L", "XL"];
 const POSIZIONI = ["POR", "DIF", "CEN", "ATT"];
 
-export default function RegisterForm({ onSubmit, initialEmail = "", emailReadOnly = false, initialData = null }) {
+export default function RegisterForm({ onSubmit, emailReadOnly = false, form, setForm }) {
   const toast = useToast();
   const buildInitialForm = () => {
     const base = {
@@ -32,7 +32,7 @@ export default function RegisterForm({ onSubmit, initialEmail = "", emailReadOnl
       ...(emailReadOnly ? { email: initialEmail || initialData.email || "" } : {}),
     };
   };
-  const [form, setForm] = useState(buildInitialForm);
+  // const [form, setForm] = useState(buildInitialForm);
   const [errors, setErrors] = useState({});
 
   // Data odierna in formato YYYY-MM-DD per vincoli sugli input date
@@ -92,7 +92,7 @@ export default function RegisterForm({ onSubmit, initialEmail = "", emailReadOnl
       toast.error("Per favore correggi gli errori del form.");
       return;
     }
-    onSubmit?.(form);
+    onSubmit?.(form, isMinor);
   };
 
   return (
