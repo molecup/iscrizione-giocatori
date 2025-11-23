@@ -27,8 +27,11 @@ export default function LoginPage() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await loginApi({ email, password });
-      router.push("/dashboard");
+      const login_info = await loginApi({ email, password }, false);
+      if (login_info.ok && login_info.isPlayer)
+         router.push("/profile");
+      else if (login_info.ok && login_info.isManager)
+        router.push("/dashboard");
     } catch (err) {
       toast.error("Login fallito: " + err.message);
     } finally {

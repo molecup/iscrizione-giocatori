@@ -7,7 +7,7 @@ export async function registerAccountApi({ token, email, password }) {
   if (!token) throw new Error("Token mancante");
   if (!email) throw new Error("Email mancante");
   if (!password || String(password).length < 6) throw new Error("Password troppo corta");
-  const request = process.env.NEXT_PUBLIC_API_URL_BASE + "/registration/player-registration/";
+  const request = process.env.API_URL_BASE + "/registration/player-registration/";
   const res = await fetch(request, {
         method: "POST",
         headers: {
@@ -28,7 +28,8 @@ export async function registerAccountApi({ token, email, password }) {
 }
 
 export async function login({ email, password }, redirectOnSuccess = true) {
-    const request = process.env.NEXT_PUBLIC_API_URL_BASE + "/registration/login/";
+    const request = process.env.API_URL_BASE + "/registration/login/";
+    
     const res = await fetch(request, {
         method: "POST",
         headers: {
@@ -56,7 +57,7 @@ export async function login({ email, password }, redirectOnSuccess = true) {
 
 export async function logout() {
     const session = await verifySession();
-    const request = process.env.NEXT_PUBLIC_API_URL_BASE + "/registration/logout/";
+    const request = process.env.API_URL_BASE + "/registration/logout/";
     const res =  await fetch(request, {
         method: "POST",
         headers: {
