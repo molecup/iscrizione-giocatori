@@ -20,14 +20,16 @@ export async function registerAccountApi({ token, email, password }) {
         })
     });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error || "Registrazione fallita");
+    const err = await res.json();
+    console.log(err);
+    /* take alla values in err and join them */
+    const errorMessage = Object.values(err).flat().join(", ");
+    throw new Error(errorMessage || "Errore sconosciuto");
   }
-  // Accept everything in mock
-  return { ok: true };
+  console.log("Registration successful");
 }
 
-export async function login({ email, password }) {
+export async function login({ email, password }, redirectOnSuccess = true) {
     const request = process.env.NEXT_PUBLIC_API_URL_BASE + "/registration/login/";
     const res = await fetch(request, {
         method: "POST",
@@ -37,17 +39,20 @@ export async function login({ email, password }) {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error || "Login fallito");
+      throw new Error(err?.error || "Login fall ito");
     }
     const data = await res.json();
-    await createSession(data.userId, data.playerId, data.list_manager_id, data.token, data.expiry);
+    const userId = data.user.id;
+    const playerId = data.user.player_user?.id;
+    const list_manager_id = data.user.player_list_manager?.id;
+    await createSession(userId, playerId, list_manager_id, data.token, data.expiry);
     console.log("Authentication successful");
-    if (data.list_manager_id){
+    if (redirectOnSuccess && playerId) {
+        redirect('/profile');
+    } else if (redirectOnSuccess && list_manager_id) {
         redirect('/dashboard');
     }
-    else {
-        redirect('/profile');
-    }
+    return { ok: true, isPlayer: !!playerId, isManager: !!list_manager_id };
 }
 
 export async function logout() {
