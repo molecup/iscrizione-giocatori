@@ -1,5 +1,6 @@
 "use server"
 import {verifySession} from "@app/lib/sessions";
+// import { register } from "next/dist/next-devtools/userspace/pages/pages-dev-overlay-setup";
 
 export async function getTeamApi() {
   await delay(400);
@@ -13,10 +14,71 @@ export async function getTeamApi() {
   };
 }
 
-export async function updatePlayersApi(updatedPlayers) {
+function api2frontendPlayerList(data) {
+    return {
+        teamName : data.name,
+        registerLink : process.env.HOSTNAME + "/register/" + data.registration_token,
+        players : data.players.map(p => ({
+            id: p.id,
+            nome: p.first_name || "",
+            cognome: p.last_name || "",
+            email: p.email || "",
+            nascita: p.date_of_birth || "",
+            numero: p.shirt_number || "",
+            taglia: p.shirt_size || "",
+            posizione: p.position || "",
+            pagato:  false, // Placeholder, da implementare TODO
+        }))
+    };
+}
+
+export async function getPlayers(){
+    const session = await verifySession();
+    const request = process.env.API_URL_BASE + "/registration/player-lists/" + session.list_manager_id + "/";
+    const res = await fetch(request, {
+        method: "GET",
+        headers: {
+            'Authorization': 'Bearer ' + session.token,
+        },
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    const data =  await res.json();
+    return api2frontendPlayerList(data);
+    
+}
+
+export async function updatePlayers(updatedPlayers) {
   const session = await verifySession();
-  await delay(600);
-  return { ok: true, players: updatedPlayers };
+  const request = process.env.API_URL_BASE + "/registration/player-lists/" + session.list_manager_id + "/";
+  const res = await fetch(request, {
+        method: "PUT",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + session.token,
+        },
+        body: JSON.stringify({
+            players : updatedPlayers.map(p => ({
+                id: p.id,
+                shirt_number : p.numero === "" ? undefined : p.numero,
+                shirt_size : p.taglia === "" ? undefined : p.taglia,
+                position : p.posizione === "" ? undefined : p.posizione,
+            })),
+        }),
+    });
+    if (!res.ok) {
+        console.log(res);
+        const err = await res.json();
+        const errorMessage = Object.values(err).flat().join(", ");
+        throw new Error(errorMessage || "Errore sconosciuto");
+    }
+
+    const data = await res.json();
+
+    return { ok: true, players: api2frontendPlayerList(data).players };
 }
 
 export async function updateSinglePlayer(updatedPlayer, hasParentData) {

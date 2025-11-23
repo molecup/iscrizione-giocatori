@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
-import PlayerTable from "../components/PlayerTable";
-import Modal from "../components/Modal";
+import PlayerTable from "@app/components/PlayerTable";
+import Modal from "@app/components/Modal";
 import { getTeamApi, updatePlayersApi, requestRemovalApi } from "../lib/mockApi";
-import { useToast } from "../components/ToastProvider";
+import {getPlayers, updatePlayers} from "@app/lib/api";
+import { useToast } from "@app/components/ToastProvider";
 
 export default function DashboardPage() {
   const toast = useToast();
@@ -19,7 +20,7 @@ export default function DashboardPage() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await getTeamApi();
+        const data = await getPlayers();
         setTeamName(data.teamName);
         setRegisterLink(data.registerLink);
         setPlayers(data.players);
@@ -34,7 +35,8 @@ export default function DashboardPage() {
   const saveChanges = async () => {
     setSaving(true);
     try {
-      await updatePlayersApi(players);
+      const res = await updatePlayers(players);
+      setPlayers(res.players);
       toast.success("Modifiche salvate");
     } catch (e) {
       toast.error("Errore salvataggio");
