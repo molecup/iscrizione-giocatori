@@ -125,6 +125,30 @@ export async function updateSinglePlayer(updatedPlayer, hasParentData) {
     return await res.json();
 }
 
+export async function submitRegistration(){
+    const session = await verifySession();
+    if (!session.playerId) {
+        throw new Error("Permessi insufficienti");
+    }
+    const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/";
+    const res = await fetch(request, {
+        method: "PATCH",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + session.token,
+        },
+        body: JSON.stringify({
+            registration_status : "SUB",
+        }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    return await res.json();
+}
+
 export async function requestRemovalApi(playerId) {
     const session = await verifySession();
     if (!session.list_manager_id) {

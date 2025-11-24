@@ -5,7 +5,7 @@ import RegisterForm from "@app/components/RegisterForm";
 import PaymentButton from "@app/components/PaymentButton";
 import styles from "./page.module.css";
 import { useToast } from "@app/components/ToastProvider";
-import { getUserData, updateSinglePlayer } from "@app/lib/api";
+import { getUserData, updateSinglePlayer, submitRegistration } from "@app/lib/api";
 import { useRouter } from "next/navigation";
 import { getUserPermissions } from "@app/lib/auth";
 
@@ -140,6 +140,16 @@ export default function RegisterPage() {
     setStep("done");
   };
 
+  const handleConfirmData = async (e) => {
+    e.preventDefault();
+    try {
+      await submitRegistration();
+      setBackDisabled(true);
+    } catch (error) {
+      toast.error("Errore: " + error.message);
+    }
+  };
+
   return (
     <div className={styles.wrapper}>
       <div className={"card " + styles.card}>
@@ -160,8 +170,18 @@ export default function RegisterPage() {
 
         {step === "summary" && data && (
           <>
-            <h2>Riepilogo</h2>
-            <p className={styles.subtitle}>Controlla i tuoi dati prima di confermare.</p>
+            {!backDisabled && <>
+              <h2>Riepilogo</h2>
+              <p className={styles.subtitle}>Controlla i tuoi dati prima di confermare.</p>
+            </>}
+            {
+              backDisabled && <>
+                <h2>Iscrizione completata con successo</h2>
+                <p className={styles.subtitle}>Riceverai una email di conferma con i dettagli dell&apos;iscrizione.</p>
+              </>
+            }
+
+            
             <div className={styles.summaryGrid}>
               <SummaryRow label="Email" value={data.email} />
               <SummaryRow label="Nome" value={data.nome} />
@@ -183,7 +203,10 @@ export default function RegisterPage() {
             </div>
             {confirmError && <p className={styles.error}>{confirmError}</p>}
             <div className={styles.actions}>
-              <button className="button secondary" onClick={()=> setStep("player") } disabled={backDisabled}>Indietro e modifica</button>
+              {!backDisabled && <>
+                <button className="button secondary" onClick={()=> setStep("player") } disabled={backDisabled}>Indietro e modifica</button>
+                <button className="button " onClick={handleConfirmData} disabled={backDisabled}>Conferma dati</button>
+              </>}
               <PaymentButton
                 amount={price}
                 onSuccess={handlePaid}
