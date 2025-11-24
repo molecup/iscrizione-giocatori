@@ -117,8 +117,58 @@ export async function updateSinglePlayer(updatedPlayer, hasParentData) {
 }
 
 export async function requestRemovalApi(playerId) {
-  await delay(600);
-  return { ok: true };
+    const session = await verifySession();
+    const request = process.env.API_URL_BASE + "/registration/deletion-requests/";
+    const res = await fetch(request, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + session.token,
+        },
+        body: JSON.stringify({ player_to_be_deleted: playerId }),
+    });
+
+    if (!res.ok) {
+        console.log(res);
+        console.log(await res.text());
+        const err = await res.json();
+        console.log(err)
+        const errorMessage = Object.values(err).flat().join(", ");
+        throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    return { ok: true };
+}
+
+export async function getRemovalRequests() {
+    const session = await verifySession();
+    const request = process.env.API_URL_BASE + "/registration/deletion-requests/";
+    const res = await fetch(request, {
+        method: "GET",
+        headers: { 
+            'Authorization': 'Bearer ' + session.token,
+        },
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    const data =  await res.json();
+    return data.requests.map(r => ({
+        requestId: r.id,
+        requestedAt: r.requested_at,
+        status: r.status, // PENDING, APPROVED, REJECTED
+        player: {
+            id: r.player_to_be_deleted.id,
+            nome: r.player_info.first_name || "",
+            cognome: r.player_info.last_name || "",
+            email: r.player_info.email || "",
+            nascita: r.player_info.date_of_birth || "",
+            numero: r.player_info.shirt_number || "",
+            taglia: r.player_info.shirt_size || "",
+            posizione: r.player_info.position || "",
+        }
+    }));
 }
 
 export async function createCheckoutSessionMock(amountCents = 2500) {

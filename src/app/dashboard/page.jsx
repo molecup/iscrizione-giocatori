@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import PlayerTable from "@app/components/PlayerTable";
 import Modal from "@app/components/Modal";
-import { getTeamApi, updatePlayersApi, requestRemovalApi } from "../lib/mockApi";
-import {getPlayers, updatePlayers} from "@app/lib/api";
+// import { getTeamApi, updatePlayersApi, requestRemovalApi } from "../lib/mockApi";
+import {getPlayers, updatePlayers, requestRemovalApi} from "@app/lib/api";
 import { useToast } from "@app/components/ToastProvider";
 
 export default function DashboardPage() {
