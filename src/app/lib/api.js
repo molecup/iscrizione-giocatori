@@ -260,6 +260,7 @@ export async function getUserData() {
             registration_fee : data.player_list.registration_fee,
             can_edit: data.registration_status !== "SUB" && data.player_list.submitted_at == null,
             is_complete: data.registration_status === "SUB" || data.registration_status === "EDIT",
+            email_verified: data.email_verified,
         }
     };
 }
@@ -284,6 +285,23 @@ export async function registerPlayerForManager(){
     console.log("Player registration for manager successfull");
     const data = await res.json();
     await addPlayerIdToSession(data.player.id);
+}
+
+export async function sendVerificationEmail(email) {
+    const request = process.env.API_URL_BASE + "/registration/create-user-mail-verification/";
+    const res = await fetch(request, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    return await res.json();
 }
 
 // Simulate account registration with token, email and password

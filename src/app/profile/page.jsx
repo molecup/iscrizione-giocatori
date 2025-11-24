@@ -5,7 +5,7 @@ import RegisterForm from "@app/components/RegisterForm";
 import PaymentButton from "@app/components/PaymentButton";
 import styles from "./page.module.css";
 import { useToast } from "@app/components/ToastProvider";
-import { getUserData, updateSinglePlayer, submitRegistration } from "@app/lib/api";
+import { getUserData, updateSinglePlayer, submitRegistration, sendVerificationEmail } from "@app/lib/api";
 import { useRouter } from "next/navigation";
 import { getUserPermissions } from "@app/lib/auth";
 
@@ -32,6 +32,7 @@ export default function RegisterPage() {
   const toast = useToast();
   const [step, setStep] = useState("player");
   const [data, setData] = useState(initialData);
+  const [emailVerified, setEmailVerified] = useState(false);
   const [confirmingSession, setConfirmingSession] = useState(false);
   const [confirmError, setConfirmError] = useState(null);
   const [backDisabled, setBackDisabled] = useState(false);
@@ -59,6 +60,7 @@ export default function RegisterPage() {
         setData({
           ...userData.formData
         });
+        setEmailVerified(userData.info.email_verified);
         setPrice(userData.info.registration_fee);
         if (userData.info.is_complete) {
           setStep("summary");
@@ -142,11 +144,25 @@ export default function RegisterPage() {
 
   const handleConfirmData = async (e) => {
     e.preventDefault();
+    if (emailVerified === false) {
+      toast.error("Devi verificare la tua email prima di procedere.");
+      return;
+    }
     try {
       await submitRegistration();
       setBackDisabled(true);
     } catch (error) {
       toast.error("Errore: " + error.message);
+    }
+  };
+
+  const handleResendVerification = async (e) => {
+    e.preventDefault();
+    try {
+      await sendVerificationEmail(data.email);
+      toast.success("Email di verifica reinviata con successo!");
+    } catch (error) {
+      toast.error("Errore invio email di verifica: " + error.message);
     }
   };
 
@@ -170,6 +186,8 @@ export default function RegisterPage() {
 
         {step === "summary" && data && (
           <>
+
+            
             {!backDisabled && <>
               <h2>Riepilogo</h2>
               <p className={styles.subtitle}>Controlla i tuoi dati prima di confermare.</p>
@@ -181,7 +199,6 @@ export default function RegisterPage() {
               </>
             }
 
-            
             <div className={styles.summaryGrid}>
               <SummaryRow label="Email" value={data.email} />
               <SummaryRow label="Nome" value={data.nome} />
@@ -202,10 +219,18 @@ export default function RegisterPage() {
               ) : null}
             </div>
             {confirmError && <p className={styles.error}>{confirmError}</p>}
+            {!emailVerified && (
+              <>
+                <div className={styles.spacer} />
+                <h2 className={styles.error}>Attenzione: l&apos;email non è stata verificata.</h2> 
+                <p className={styles.subtitle}>Per completare l&apos;iscrizione, verifica la tua email cliccando sul link che ti è stato inviato.</p>
+                <a href="/verify-email-resend" className="button secondary" onClick={handleResendVerification}>Reinvia email di verifica</a>
+              </>
+            )}
             <div className={styles.actions}>
               {!backDisabled && <>
                 <button className="button secondary" onClick={()=> setStep("player") } disabled={backDisabled}>Indietro e modifica</button>
-                <button className="button " onClick={handleConfirmData} disabled={backDisabled}>Conferma dati</button>
+                <button className="button " onClick={handleConfirmData} disabled={backDisabled && !emailVerified}>Conferma dati</button>
               </>}
 
               {price > 0.0 && <PaymentButton

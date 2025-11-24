@@ -124,3 +124,25 @@ export async function requestPasswordReset({ email }) {
     }
     console.log("Password reset request successful");
 }
+
+export async function verifyEmail(token, mail) {
+    if (!token) throw new Error("Token mancante");
+    const request = process.env.API_URL_BASE + "/registration/confirm-user-mail-verification/";
+    const res = await fetch(request, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+            "token": token, 
+            "mail": mail,
+        })
+    });
+    if (!res.ok) {
+      console.log(res)
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    console.log("Email verification successful");
+}
