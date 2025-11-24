@@ -207,7 +207,8 @@ export default function RegisterPage() {
                 <button className="button secondary" onClick={()=> setStep("player") } disabled={backDisabled}>Indietro e modifica</button>
                 <button className="button " onClick={handleConfirmData} disabled={backDisabled}>Conferma dati</button>
               </>}
-              <PaymentButton
+
+              {price > 0.0 && <PaymentButton
                 amount={price}
                 onSuccess={handlePaid}
                 customerEmail={data.email}
@@ -218,7 +219,7 @@ export default function RegisterPage() {
                   cognome: data.cognome,
                   cf: data.cf,
                 }}
-              />
+              />}
             </div>
             {confirmingSession && <p className={styles.subtitle}>Verifica pagamento in corso...</p>}
           </>
