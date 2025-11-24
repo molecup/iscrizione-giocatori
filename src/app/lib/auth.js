@@ -78,3 +78,49 @@ export async function logout() {
     await deleteSession();
     redirect('/login');
 }
+
+export async function resetPassword(token, mail, password) {
+    if (!token) throw new Error("Token mancante");
+    if (!password ) throw new Error("Password mancante");
+
+    const request = process.env.API_URL_BASE + "/registration/reset-password-requests/";
+    const res = await fetch(request, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+            "token": token, 
+            "mail": mail,
+            "new_password": password ,
+        })
+    });
+    if (!res.ok) {
+      console.log(res)
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    console.log("Password reset successful");
+}
+
+export async function requestPasswordReset({ email }) {
+    if (!email) throw new Error("Email mancante");
+    const request = process.env.API_URL_BASE + "/registration/create-password-reset-request/";
+    const res = await fetch(request, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+            "mail": email, 
+        })
+    });
+    if (!res.ok) {
+      console.log(res)
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    console.log("Password reset request successful");
+}

@@ -1,23 +1,24 @@
 "use client";
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
 // import { getEmailFromTokenApi } from "../../lib/mockApi";
-import { registerAccountApi, login } from "@app/lib/auth";
+import { resetPassword as resetPasswordApi, login } from "@app/lib/auth";
 import { useToast } from "@app/components/ToastProvider";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const { token } = useParams();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+  const mail = searchParams.get("mail");
   const router = useRouter();
   const toast = useToast();
   
 
   // Phase 1 state (account creation)
-  const [accountEmail, setAccountEmail] = useState("");
   const [accountPassword, setAccountPassword] = useState("");
   const [accountPasswordRepeat, setAccountPasswordRepeat] = useState("");
-  const [submittingAccount, setSubmittingAccount] = useState(false);
+  const [submittingReset, setSubmittingReset] = useState(false);
   const [accErrors, setAccErrors] = useState({});
 
   // useEffect(() => {
@@ -37,28 +38,30 @@ export default function RegisterPage() {
 
   const validateAccount = () => {
     const e = {};
-    if (!accountEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail)) e.email = "Email non valida";
     if (!accountPassword || accountPassword.length < 6) e.password = "Minimo 6 caratteri";
     if (accountPassword !== accountPasswordRepeat) e.passwordRepeat = "Le password non coincidono";
     setAccErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const submitAccount = async (e) => {
+  const resetPassword = async (e) => {
     e.preventDefault();
     if (!validateAccount()) return;
-    setSubmittingAccount(true);
+    setSubmittingReset(true);
     try {
-      await registerAccountApi({ token, email: accountEmail, password: accountPassword });
-      toast.success("Account creato con successo!");
-      const login_status = await login({ email: accountEmail, password: accountPassword }, false);
-      console.log("Login status after registration:", login_status);
-      if (login_status.ok && login_status.isPlayer)
+      await resetPasswordApi(token, mail, accountPassword);
+      toast.success("Password reimpostata con successo!");
+      const login_info = await login({ email: mail, password: accountPassword }, false);
+      if (login_info.ok && login_info.isPlayer)
          router.push("/profile");
+      else if (login_info.ok && login_info.isManager)
+         router.push("/dashboard");
+      else
+         router.push("/login");
     } catch (err) {
-      toast.error("Registrazione fallita: " + err.message);
+      toast.error("Reimpostazione password fallita: " + err.message);
     } finally {
-      setSubmittingAccount(false);
+    setSubmittingReset(false);
     }
   };
 
@@ -66,21 +69,8 @@ export default function RegisterPage() {
     <div className={styles.wrapper}>
       <div className={"card " + styles.card}>
           <>
-            <h2>Creazione account</h2>
-            <p className={styles.subtitle}>Token invito: <code>{token}</code></p>
-            <form onSubmit={submitAccount} className={styles.formAccount}>
-              <label className={styles.field}>
-                <span className="label">Email</span>
-                <input
-                  className="input"
-                  type="email"
-                  value={accountEmail}
-                  onChange={(e)=>setAccountEmail(e.target.value)}
-                  required
-                  // readOnly={loadingPrefill}
-                />
-                {accErrors.email && <span className={styles.error}>{accErrors.email}</span>}
-              </label>
+            <h2>Imposta password</h2>
+            <form onSubmit={resetPassword} className={styles.formAccount}>
               <label className={styles.field}>
                 <span className="label">Password</span>
                 <input
@@ -104,8 +94,8 @@ export default function RegisterPage() {
                 {accErrors.passwordRepeat && <span className={styles.error}>{accErrors.passwordRepeat}</span>}
               </label>
               <div className={styles.actions}>
-                <button className="button" type="submit" disabled={submittingAccount}>
-                  {submittingAccount ? "Creazione..." : "Crea account"}
+                <button className="button" type="submit" disabled={submittingReset}>
+                  {submittingReset ? "Caricamento..." : "Reimposta password"}
                 </button>
               </div>
             </form>

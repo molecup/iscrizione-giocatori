@@ -3,3 +3,12 @@
 .field { display: flex; flex-direction: column; gap: 6px; }
 .subtitle { color: var(--muted); margin-bottom: 8px; }
 .error { color: #dc2626; font-size: 12px; }
+.forgotLink {
+  text-decoration: underline;
+  /* Optional tweaks: */
+  text-decoration-thickness: 1px; 
+  color: #0366d6;
+}
+  .forgotLink:hover {
+  color: var(--primary);
+}
