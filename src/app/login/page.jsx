@@ -43,7 +43,7 @@ export default function LoginPage() {
     <div className={styles.wrapper}>
       <form onSubmit={onSubmit} className={styles.form + " card"}>
         <h2>Accedi</h2>
-        <p className={styles.subtitle}>Referente squadra (capitano/allenatore)</p>
+        {/* <p className={styles.subtitle}>Referente squadra (capitano/allenatore)</p> */}
         <label className={styles.field}>
           <span className="label">Email</span>
           <input className="input" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required />
