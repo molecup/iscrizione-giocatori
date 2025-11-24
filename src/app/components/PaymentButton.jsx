@@ -44,7 +44,7 @@ export default function PaymentButton({ amount = 50, onSuccess, customerEmail, m
   return (
     <button className={styles.pay + " button"} onClick={handlePay} disabled={loading || disabled}>
       {loading ? "Reindirizzamento..." : "Paga quota"}
-      <span className={styles.amount}>{amount.toFixed(2)} €</span>
+      <span className={styles.amount}>{amount} €</span>
     </button>
   );
 }

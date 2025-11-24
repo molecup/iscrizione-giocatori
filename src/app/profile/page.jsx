@@ -33,6 +33,7 @@ export default function RegisterPage() {
   const [confirmingSession, setConfirmingSession] = useState(false);
   const [confirmError, setConfirmError] = useState(null);
   const [backDisabled, setBackDisabled] = useState(false);
+  const [price, setPrice] = useState(0.0);
 
   // Phase 1 state (account creation)
 
@@ -46,8 +47,9 @@ export default function RegisterPage() {
         setData({
           ...userData.formData
         });
+        setPrice(userData.info.registration_fee);
         if (userData.info.is_complete) {
-          setStep("payment");
+          setStep("summary");
         }
         setBackDisabled(!userData.info.can_edit);
       } catch (error) {
@@ -85,7 +87,7 @@ export default function RegisterPage() {
         }
       })();
     } else if (canceled === "1") {
-      setStep("payment");
+      setStep("summary");
       toast.error("Pagamento annullato");
     }
   }, [searchParams, toast]);
@@ -116,7 +118,7 @@ export default function RegisterPage() {
     // setData(formData);
     try {
       await updateSinglePlayer(formData, isMinor);
-      setStep("payment");
+      setStep("summary");
     } catch (error) {
       toast.error("Errore: " + error.message);
     }
@@ -144,10 +146,10 @@ export default function RegisterPage() {
           </>
         )}
 
-        {step === "payment" && data && (
+        {step === "summary" && data && (
           <>
-            <h2>Pagamento</h2>
-            <p className={styles.subtitle}>Controlla i dati prima del pagamento.</p>
+            <h2>Riepilogo</h2>
+            <p className={styles.subtitle}>Controlla i tuoi dati prima di confermare.</p>
             <div className={styles.summaryGrid}>
               <SummaryRow label="Email" value={data.email} />
               <SummaryRow label="Nome" value={data.nome} />
@@ -171,7 +173,7 @@ export default function RegisterPage() {
             <div className={styles.actions}>
               <button className="button secondary" onClick={()=> setStep("player") } disabled={backDisabled}>Indietro e modifica</button>
               <PaymentButton
-                amount={0.5}
+                amount={price}
                 onSuccess={handlePaid}
                 customerEmail={data.email}
                 disabled={confirmingSession}
