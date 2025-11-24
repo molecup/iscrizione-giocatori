@@ -4,7 +4,7 @@ import styles from "./page.module.css";
 import PlayerTable from "@app/components/PlayerTable";
 import Modal from "@app/components/Modal";
 // import { getTeamApi, updatePlayersApi, requestRemovalApi } from "../lib/mockApi";
-import {getPlayers, updatePlayers, requestRemovalApi} from "@app/lib/api";
+import {getPlayers, updatePlayers, requestRemovalApi, registerPlayerForManager} from "@app/lib/api";
 import { useToast } from "@app/components/ToastProvider";
 import { useRouter } from "next/navigation";
 import { getUserPermissions } from "@app/lib/auth";
@@ -73,6 +73,17 @@ export default function DashboardPage() {
     }
   };
 
+  const handleRegisterPlayerForManager = async (e) => {
+    e.preventDefault();
+    try {
+      await registerPlayerForManager();
+      toast.success("Giocatore registrato con successo");
+      router.refresh();
+    } catch (e) {
+      toast.error("Errore registrazione giocatore.: " + e.message);
+    }
+  };
+
   if (loading) return <p>Caricamento...</p>;
 
   return (
@@ -105,6 +116,8 @@ export default function DashboardPage() {
             Copia
           </button>
         </div>
+        <p>Usa il bottone qua sotto per registrare te stesso come giocatore. </p>
+         <button className="button secondary" onClick={handleRegisterPlayerForManager}>Registrami come giocatore</button>
       </Modal>
 
       <Modal open={!!removal} onClose={()=> setRemoval(null)} title="Richiesta rimozione giocatore"

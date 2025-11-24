@@ -46,7 +46,6 @@ export const verifySession = cache(async () => {
   const session = await decrypt(cookie)
  
   if (!session?.userId || new Date(session?.expiresAt) < new Date()) {
-    // redirect('/login')
     return { isAuth: false };
   }
  
@@ -56,4 +55,16 @@ export const verifySession = cache(async () => {
 export async function deleteSession() {
   const cookieStore = await cookies()
   cookieStore.delete('session')
+}
+
+export async function addPlayerIdToSession(playerId) {
+    const cookieStore = await cookies()
+    const cookie = cookieStore.get('session')?.value
+    const session = await decrypt(cookie)
+    cookieStore.delete('session');
+
+    if (!session?.userId || new Date(session?.expiresAt) < new Date()) {
+        return;
+    }
+    await createSession(session.userId, playerId, session.list_manager_id, session.token, session.expiresAt);
 }

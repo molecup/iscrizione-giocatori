@@ -1,5 +1,5 @@
 "use server"
-import {verifySession} from "@app/lib/sessions";
+import {verifySession, addPlayerIdToSession} from "@app/lib/sessions";
 // import { register } from "next/dist/next-devtools/userspace/pages/pages-dev-overlay-setup";
 
 export async function getTeamApi() {
@@ -238,6 +238,28 @@ export async function getUserData() {
             is_complete: data.registration_status === "SUB" || data.registration_status === "EDIT",
         }
     };
+}
+
+export async function registerPlayerForManager(){
+    const session = await verifySession();
+    if (!session.list_manager_id) {
+        throw new Error("Permessi insufficienti");
+    }
+    const request = process.env.API_URL_BASE + "/registration/player-registration-for-manager/";
+    const res = await fetch(request, {
+        method: "POST",
+        headers: {
+            'Authorization': 'Bearer ' + session.token,
+        },
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    console.log("Player registration for manager successfull");
+    const data = await res.json();
+    await addPlayerIdToSession(data.player.id);
 }
 
 // Simulate account registration with token, email and password
