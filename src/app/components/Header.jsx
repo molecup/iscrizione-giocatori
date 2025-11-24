@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import styles from "./Header.module.css";
 import {logout} from "@app/lib/auth"
+import { useRouter } from "next/navigation";
 
-export default function Header() {
+export default function Header({ user_permissions }) {
     const [dark, setDark] = useState(false);
     const light = !dark;
+    const router = useRouter();
 
     useEffect(() => {
         const saved = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
@@ -30,6 +32,12 @@ export default function Header() {
         transition: "filter .18s ease"
     };
 
+    const handle_logout = async (e) => {
+        e.preventDefault();
+        await logout();
+        router.push("/login");
+    }
+
     return (
         <header className={styles.header}>
             <div className={styles.inner + " container"}>
@@ -38,11 +46,11 @@ export default function Header() {
                     <span>LCS</span>
                 </Link>
                 <nav className={styles.nav}>
-                    <Link href="/login" className={styles.link}>Login</Link>
-                    <Link href="/profile" className={styles.link}>Profile</Link>
-                    <Link href="/dashboard" className={styles.link}>Dashboard</Link>
+                    {!user_permissions?.isAuth && <Link href="/login" className={styles.link}>Login</Link>}
+                    {user_permissions?.isPlayer && <Link href="/profile" className={styles.link}>Profile</Link>}
+                    {user_permissions?.isManager && <Link href="/dashboard" className={styles.link}>Dashboard</Link>}
                     <Link href="/privacy" className={styles.link}>Privacy</Link>
-                    <Link href="/login" className={styles.link} onClick={logout}>Log Out</Link>
+                    {user_permissions?.isAuth && <Link href="/login" className={styles.link} onClick={handle_logout}>Log Out</Link>}
 
                     <button className="button secondary" onClick={() => setDark(v => !v)} aria-pressed={dark}>
                         {dark ? "Light" : "Dark"} mode

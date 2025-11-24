@@ -6,9 +6,12 @@ import Modal from "@app/components/Modal";
 // import { getTeamApi, updatePlayersApi, requestRemovalApi } from "../lib/mockApi";
 import {getPlayers, updatePlayers, requestRemovalApi} from "@app/lib/api";
 import { useToast } from "@app/components/ToastProvider";
+import { useRouter } from "next/navigation";
+import { getUserPermissions } from "@app/lib/auth";
 
 export default function DashboardPage() {
   const toast = useToast();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [teamName, setTeamName] = useState("");
   const [registerLink, setRegisterLink] = useState("");
@@ -16,6 +19,16 @@ export default function DashboardPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [saving, setSaving] = useState(false);
   const [removal, setRemoval] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const user_permissions = await getUserPermissions()
+      if (!user_permissions?.isManager) {
+        router.push("/login");
+      }
+    })();
+  }, []);
+
 
   useEffect(() => {
     (async () => {

@@ -27,6 +27,12 @@ export async function registerAccountApi({ token, email, password }) {
   console.log("Registration successful");
 }
 
+export async function getUserPermissions() {
+    const session = await verifySession();
+
+    return { isAuth: session.isAuth, isPlayer: !!session?.playerId, isManager: !!session?.list_manager_id };
+}
+
 export async function login({ email, password }, redirectOnSuccess = true) {
     const request = process.env.API_URL_BASE + "/registration/login/";
     

@@ -46,7 +46,8 @@ export const verifySession = cache(async () => {
   const session = await decrypt(cookie)
  
   if (!session?.userId || new Date(session?.expiresAt) < new Date()) {
-    redirect('/login')
+    // redirect('/login')
+    return { isAuth: false };
   }
  
   return { isAuth: true, userId: session.userId, playerId: session.playerId, list_manager_id: session.list_manager_id, token: session.token }

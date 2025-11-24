@@ -6,6 +6,8 @@ import PaymentButton from "@app/components/PaymentButton";
 import styles from "./page.module.css";
 import { useToast } from "@app/components/ToastProvider";
 import { getUserData, updateSinglePlayer } from "@app/lib/api";
+import { useRouter } from "next/navigation";
+import { getUserPermissions } from "@app/lib/auth";
 
 export default function RegisterPage() {
   // const { token } = useParams();
@@ -34,10 +36,20 @@ export default function RegisterPage() {
   const [confirmError, setConfirmError] = useState(null);
   const [backDisabled, setBackDisabled] = useState(false);
   const [price, setPrice] = useState(0.0);
+  const router = useRouter();
 
   // Phase 1 state (account creation)
 
   const [loadingPrefill, setLoadingPrefill] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const user_permissions = await getUserPermissions()
+      if (!user_permissions?.isPlayer) {
+        router.push("/login");
+      }
+    })();
+  }, [router]);
 
   // Fetch user data to prefill the form
   useEffect(() => {

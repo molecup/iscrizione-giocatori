@@ -34,6 +34,9 @@ function api2frontendPlayerList(data) {
 
 export async function getPlayers(){
     const session = await verifySession();
+    if (!session.list_manager_id) {
+        return { teamName: "", registerLink: "", players: [] };
+    }
     const request = process.env.API_URL_BASE + "/registration/player-lists/" + session.list_manager_id + "/";
     const res = await fetch(request, {
         method: "GET",
@@ -53,6 +56,9 @@ export async function getPlayers(){
 
 export async function updatePlayers(updatedPlayers) {
   const session = await verifySession();
+  if (!session.list_manager_id) {
+        throw new Error("Permessi insufficienti");
+    }
   const request = process.env.API_URL_BASE + "/registration/player-lists/" + session.list_manager_id + "/";
   const res = await fetch(request, {
         method: "PUT",
@@ -82,6 +88,9 @@ export async function updatePlayers(updatedPlayers) {
 
 export async function updateSinglePlayer(updatedPlayer, hasParentData) {
     const session = await verifySession();
+    if (!session.playerId) {
+        throw new Error("Permessi insufficienti");
+    }
     const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/";
     const res = await fetch(request, {
         method: "PUT",
@@ -118,6 +127,9 @@ export async function updateSinglePlayer(updatedPlayer, hasParentData) {
 
 export async function requestRemovalApi(playerId) {
     const session = await verifySession();
+    if (!session.list_manager_id) {
+        throw new Error("Permessi insufficienti");
+    }
     const request = process.env.API_URL_BASE + "/registration/deletion-requests/";
     const res = await fetch(request, {
         method: "POST",
@@ -141,6 +153,9 @@ export async function requestRemovalApi(playerId) {
 
 export async function getRemovalRequests() {
     const session = await verifySession();
+    if (!session.list_manager_id) {
+        return [];
+    }
     const request = process.env.API_URL_BASE + "/registration/deletion-requests/";
     const res = await fetch(request, {
         method: "GET",
@@ -179,6 +194,9 @@ export async function createCheckoutSessionMock(amountCents = 2500) {
 
 export async function getUserData() {
     const session = await verifySession();
+    if (!session.playerId) {
+        return { formData : {}, info : {} };
+    }
     const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/";
 
     const res = await fetch(request, {
