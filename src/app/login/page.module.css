@@ -4,11 +4,33 @@
 .subtitle { color: var(--muted); margin-bottom: 8px; }
 .error { color: #dc2626; font-size: 12px; }
 .forgotLink {
-  text-decoration: underline;
-  /* Optional tweaks: */
-  text-decoration-thickness: 1px; 
-  color: #0366d6;
-}
-  .forgotLink:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--primary);
+  background: rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.forgotLink:hover,
+.forgotLink:focus-visible {
+  background: rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.forgotIcon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
 }

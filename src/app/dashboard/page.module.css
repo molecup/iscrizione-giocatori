@@ -2,4 +2,13 @@
 .header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; }
 .muted { color: var(--muted); }
 .actions { display: flex; gap: 8px; }
-.inviteBox { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 8px; }
+.inviteSection { display: flex; flex-direction: column; gap: 8px; }
+.inviteBox { margin-top: 4px; display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px dashed var(--border); border-radius: 8px; background: transparent; }
+.inviteLink { flex: 1; font-size: 0.9rem; line-height: 1.4; word-break: break-all; white-space: pre-wrap; }
+.inviteCopyButton { flex-shrink: 0; white-space: nowrap; }
+.inviteSelfBlock { display: flex; flex-direction: column; gap: 12px; padding-top: 8px; border-top: 1px solid var(--border); margin-top: 16px; }
+@media (max-width: 600px) {
+  .inviteBox { flex-direction: column; align-items: stretch; }
+  .inviteCopyButton { width: 100%; }
+  .inviteSelfBlock button { width: 100%; }
+}

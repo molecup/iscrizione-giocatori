@@ -55,7 +55,10 @@ export default function LoginPage() {
           {errors.password && <span className={styles.error}>{errors.password}</span>}
         </label>
         <button disabled={loading} className="button" type="submit">{loading ? "Accesso..." : "Entra"}</button>
-        <a className={styles.forgotLink} href="/password-dimenticata">Password dimenticata</a>
+        <a className={styles.forgotLink} href="/password-dimenticata">
+          <span className={styles.forgotIcon} aria-hidden="true">?</span>
+          <span>Password dimenticata</span>
+        </a>
       </form>
     </div>
   );

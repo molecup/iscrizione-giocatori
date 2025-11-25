@@ -102,22 +102,33 @@ export default function DashboardPage() {
       <PlayerTable players={players} setPlayers={setPlayers} onRequestRemoval={requestRemoval} />
 
       <Modal open={showInvite} onClose={()=> setShowInvite(false)} title="Link invito registrazione">
-        <p>Copia e invia il seguente link ai giocatori per registrarsi:</p>
-        <div className={styles.inviteBox}>
-          <code>{registerLink}</code>
-          <button
-            className="button secondary"
-            onClick={()=>{
-              navigator.clipboard.writeText(registerLink)
-                .then(()=> toast.success("Link copiato"))
-                .catch(()=> toast.error("Impossibile copiare"));
-            }}
-          >
-            Copia
-          </button>
+        <div className={styles.inviteSection}>
+          <p>Copia e invia il seguente link ai giocatori per registrarsi:</p>
+          <div className={styles.inviteBox}>
+            <code
+              className={styles.inviteLink}
+              tabIndex={0}
+              title="Link invito registrazione"
+            >
+              {registerLink}
+            </code>
+            <button
+              className={`button secondary ${styles.inviteCopyButton}`}
+              aria-label="Copia link invito registrazione"
+              onClick={()=>{
+                navigator.clipboard.writeText(registerLink)
+                  .then(()=> toast.success("Link copiato"))
+                  .catch(()=> toast.error("Impossibile copiare"));
+              }}
+            >
+              Copia
+            </button>
+          </div>
         </div>
-        <p>Usa il bottone qua sotto per registrare te stesso come giocatore. </p>
-         <button className="button secondary" onClick={handleRegisterPlayerForManager}>Registrami come giocatore</button>
+        <div className={styles.inviteSelfBlock}>
+          <p>Usa il bottone qua sotto per registrare te stesso come giocatore.</p>
+          <button className="button secondary" onClick={handleRegisterPlayerForManager}>Registrami come giocatore</button>
+        </div>
       </Modal>
 
       <Modal open={!!removal} onClose={()=> setRemoval(null)} title="Richiesta rimozione giocatore"
