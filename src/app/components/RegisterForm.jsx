@@ -54,6 +54,16 @@ export default function RegisterForm({ onSubmit, emailReadOnly = false, form, se
     return age < 18;
   }, [form.nascita]);
 
+  const isMinorParent = useMemo(() => {
+    if (!form.genitoreNascita) return false;
+    const today = new Date();
+    const dob = new Date(form.genitoreNascita);
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    return age < 18;
+  }, [form.genitoreNascita]);
+
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
   const validate = () => {
@@ -79,8 +89,11 @@ export default function RegisterForm({ onSubmit, emailReadOnly = false, form, se
         e.genitoreNascita = "Obbligatorio";
       } else if (!isPastDate(form.genitoreNascita, todayStr)) {
         e.genitoreNascita = "La data deve essere antecedente a oggi";
+      } else if (isMinorParent) {
+        e.genitoreNascita = "Il genitore deve essere maggiorenne";
       }
       if (!validateCF(form.genitoreCf)) e.genitoreCf = "Codice fiscale non valido";
+      if (form.genitoreCf === form.cf) e.genitoreCf = "Deve essere diverso dal codice fiscale del giocatore";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -119,6 +132,9 @@ export default function RegisterForm({ onSubmit, emailReadOnly = false, form, se
           <Field label="Data di nascita" error={errors.nascita}>
             <input className="input" type="date" max={todayStr} value={form.nascita} onChange={(e)=>update('nascita', e.target.value)} required />
           </Field>
+          <Field label="Luogo di nascita" error={errors.luogoNascita}>
+            <input className="input" value={form.luogoNascita} onChange={(e)=>update('luogoNascita', e.target.value)} required />
+          </Field>
           <Field label="Codice fiscale" error={errors.cf}>
             <input className="input" value={form.cf} onChange={(e)=>update('cf', e.target.value.toUpperCase())} required />
           </Field>
@@ -152,6 +168,9 @@ export default function RegisterForm({ onSubmit, emailReadOnly = false, form, se
             </Field>
             <Field label="Data di nascita genitore" error={errors.genitoreNascita}>
               <input className="input" type="date" max={todayStr} value={form.genitoreNascita} onChange={(e)=>update('genitoreNascita', e.target.value)} required={isMinor} />
+            </Field>
+            <Field label="Luogo di nascita genitore" error={errors.genitoreLuogoNascita}>
+              <input className="input" value={form.genitoreLuogoNascita} onChange={(e)=>update('genitoreLuogoNascita', e.target.value)} required={isMinor} />
             </Field>
             <Field label="Codice fiscale genitore" error={errors.genitoreCf}>
               <input className="input" value={form.genitoreCf} onChange={(e)=>update('genitoreCf', e.target.value.toUpperCase())} required={isMinor} />

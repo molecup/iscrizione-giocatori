@@ -17,6 +17,7 @@ export default function RegisterPage() {
   nome: "",
   cognome: "",
   nascita: "",
+  luogoNascita: "",
   cf: "",
   numero: "",
   taglia: "",
@@ -25,6 +26,7 @@ export default function RegisterPage() {
   genitoreNome: "",
   genitoreCognome: "",
   genitoreNascita: "",
+  genitoreLuogoNascita: "",
   genitoreCf: "",
 };
 
@@ -204,6 +206,7 @@ export default function RegisterPage() {
               <SummaryRow label="Nome" value={data.nome} />
               <SummaryRow label="Cognome" value={data.cognome} />
               <SummaryRow label="Data di nascita" value={data.nascita} />
+              <SummaryRow label="Luogo di nascita" value={data.luogoNascita} />
               <SummaryRow label="Codice fiscale" value={data.cf} />
               <SummaryRow label="Numero maglia" value={data.numero} />
               <SummaryRow label="Taglia" value={data.taglia} />
@@ -214,6 +217,7 @@ export default function RegisterPage() {
                   <SummaryRow label="Nome genitore" value={data.genitoreNome} />
                   <SummaryRow label="Cognome genitore" value={data.genitoreCognome} />
                   <SummaryRow label="Data di nascita genitore" value={data.genitoreNascita} />
+                  <SummaryRow label="Luogo di nascita genitore" value={data.genitoreLuogoNascita} />
                   <SummaryRow label="Codice fiscale genitore" value={data.genitoreCf} />
                 </>
               ) : null}

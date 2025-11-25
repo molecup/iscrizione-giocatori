@@ -102,6 +102,7 @@ export async function updateSinglePlayer(updatedPlayer, hasParentData) {
             first_name : updatedPlayer.nome,
             last_name : updatedPlayer.cognome,
             date_of_birth : updatedPlayer.nascita,
+            place_of_birth : updatedPlayer.luogoNascita,
             shirt_number : updatedPlayer.numero,
             shirt_size : updatedPlayer.taglia,
             position : updatedPlayer.posizione,
@@ -112,6 +113,7 @@ export async function updateSinglePlayer(updatedPlayer, hasParentData) {
                 first_name : updatedPlayer.genitoreNome,
                 last_name : updatedPlayer.genitoreCognome,
                 date_of_birth : updatedPlayer.genitoreNascita,
+                place_of_birth : updatedPlayer.genitoreLuogoNascita,
                 code_fiscal : updatedPlayer.genitoreCf,
             } : undefined
         }),
@@ -245,6 +247,7 @@ export async function getUserData() {
             cognome : data.last_name || "",
             email : data.user.email || "",
             nascita : data.date_of_birth || "",
+            luogoNascita : data.place_of_birth || "",
             numero : data.shirt_number || "",
             taglia : data.shirt_size || "",
             posizione : data.position || "",
@@ -253,6 +256,7 @@ export async function getUserData() {
             genitoreNome : data.parent?.first_name || "",
             genitoreCognome : data.parent?.last_name || "",
             genitoreNascita : data.parent?.date_of_birth || "",
+            genitoreLuogoNascita : data.parent?.place_of_birth || "",
             genitoreCf : data.parent?.code_fiscal || "",
         },
         info : {
