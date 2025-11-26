@@ -18,6 +18,7 @@ function api2frontendPlayerList(data) {
     return {
         teamName : data.name,
         registerLink : process.env.HOSTNAME + "/register/" + data.registration_token,
+        registration_fee : data.registration_fee,
         players : data.players.map(p => ({
             id: p.id,
             nome: p.first_name || "",
