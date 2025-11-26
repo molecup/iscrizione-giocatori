@@ -35,7 +35,7 @@ export async function getUserPermissions() {
 
 export async function login({ email, password }, redirectOnSuccess = true) {
     const request = process.env.API_URL_BASE + "/registration/login/";
-    
+    console.log(request);
     const res = await fetch(request, {
         method: "POST",
         headers: {
