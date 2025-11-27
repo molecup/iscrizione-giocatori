@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [saving, setSaving] = useState(false);
   const [removal, setRemoval] = useState(null);
+  const [hidePayment, setHidePayment] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -37,6 +38,7 @@ export default function DashboardPage() {
         setTeamName(data.teamName);
         setRegisterLink(data.registerLink);
         setPlayers(data.players);
+        setHidePayment(data.registration_fee <= 0);
       } catch (e) {
         toast.error("Errore caricamento dati squadra");
       } finally {
@@ -99,7 +101,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <PlayerTable players={players} setPlayers={setPlayers} onRequestRemoval={requestRemoval} />
+      <PlayerTable players={players} setPlayers={setPlayers} onRequestRemoval={requestRemoval} hidePayment={hidePayment} />
 
       <Modal open={showInvite} onClose={()=> setShowInvite(false)} title="Link invito registrazione">
         <div className={styles.inviteSection}>

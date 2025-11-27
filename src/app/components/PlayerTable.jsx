@@ -6,7 +6,7 @@ import styles from "./PlayerTable.module.css";
 const TAGLIE = ["S", "M", "L", "XL"];
 const POSIZIONI = ["POR", "DIF", "CEN", "ATT"];
 
-export default function PlayerTable({ players, setPlayers, onRequestRemoval }) {
+export default function PlayerTable({ players, setPlayers, onRequestRemoval, hidePayment=false }) {
   const [sortKey, setSortKey] = useState("cognome");
   const [sortAsc, setSortAsc] = useState(true);
 
@@ -37,7 +37,7 @@ export default function PlayerTable({ players, setPlayers, onRequestRemoval }) {
             <th>Numero</th>
             <th>Taglia</th>
             <th>Posizione</th>
-            <th>Quota pagata</th>
+            {!hidePayment && <th>Quota pagata</th>}
             <th>Azione</th>
           </tr>
         </thead>
@@ -65,9 +65,9 @@ export default function PlayerTable({ players, setPlayers, onRequestRemoval }) {
               <td>
                 <EditableCell value={p.posizione} onChange={(v)=>updateField(p.id,'posizione',v)} type="select" options={POSIZIONI} placeholder="Posizione" />
               </td>
-              <td style={{textAlign:'center'}}>
+              {!hidePayment && <td style={{textAlign:'center'}}>
                 <input type="checkbox" checked={!!p.pagato} disabled aria-label="Quota pagata" />
-              </td>
+              </td>}
               <td>
                 <button className="button secondary" onClick={()=>onRequestRemoval?.(p)}>Richiedi rimozione</button>
               </td>
