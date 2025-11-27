@@ -1,0 +1,22 @@
+.card { border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; background: var(--card); display: flex; flex-direction: column; gap: 16px; }
+.header { display: flex;
+    justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.subtitle { margin-top: 4px; color: var(--muted); font-size: 14px; }
+.badge { align-self: flex-start; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.badgeSuccess { background: var(--success-bg); color: var(--success-fg); }
+.badgeWarning { background: var(--warning-bg); color: var(--warning-fg); }
+.badgeInfo { background: #e0f2fe; color: #075985; }
+.fileInfo { border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.fileActions { display: flex; gap: 8px; }
+.dropzone { border: 2px dashed var(--border); border-radius: 12px; padding: 24px; text-align: center; transition: border-color 0.2s, background 0.2s; }
+.dropzoneActive { border-color: var(--foreground); background: var(--hover); }
+.dropzoneDisabled { opacity: 0.6; pointer-events: none; }
+.dropTitle { font-weight: 600; }
+.dropHint { color: var(--muted); margin: 4px 0 12px; }
+.hiddenInput { display: none; }
+.lockedMessage { color: var(--muted); font-size: 14px; }
+.lockedMessage strong { color: var(--foreground); }
+@media (max-width: 640px) {
+  .fileInfo { flex-direction: column; }
+  .fileActions { width: 100%; justify-content: flex-start; }
+}

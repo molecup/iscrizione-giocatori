@@ -265,6 +265,7 @@ export async function getUserData() {
             can_edit: data.registration_status !== "SUB" && data.player_list.submitted_at == null,
             is_complete: data.registration_status === "SUB" || data.registration_status === "EDIT",
             email_verified: data.email_verified,
+            medical_certificate: data.medical_certificate || null,
         }
     };
 }
@@ -313,4 +314,65 @@ export async function sendVerificationEmail(email) {
 
 function delay(ms) {
   return new Promise(res => setTimeout(res, ms));
+}
+
+export async function getMedicalCertificate() {
+    const session = await verifySession();
+    if (!session.playerId) {
+        throw new Error("Permessi insufficienti");
+    }
+    const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/";
+    const res = await fetch(request, {
+        method: "GET",
+        headers: {
+            'Authorization': 'Bearer ' + session.token,
+        },
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    return await res.json();
+}
+
+export async function uploadMedicalCertificate(formData) {
+    const session = await verifySession();
+    if (!session.playerId) {
+        throw new Error("Permessi insufficienti");
+    }
+    const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/";
+    const res = await fetch(request, {
+        method: "POST",
+        headers: {
+            'Authorization': 'Bearer ' + session.token,
+        },
+        body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    return await res.json();
+}
+
+export async function deleteMedicalCertificate() {
+    const session = await verifySession();
+    if (!session.playerId) {
+        throw new Error("Permessi insufficienti");
+    }
+    const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/";
+    const res = await fetch(request, {
+        method: "DELETE",
+        headers: {
+            'Authorization': 'Bearer ' + session.token,
+        },
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    return await res.json();
 }

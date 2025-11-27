@@ -9,6 +9,7 @@ import { useToast } from "@app/components/ToastProvider";
 import { getUserData, updateSinglePlayer, submitRegistration, sendVerificationEmail } from "@app/lib/api";
 import { useRouter } from "next/navigation";
 import { getUserPermissions } from "@app/lib/auth";
+import MedicalCertificateUpload from "@app/components/MedicalCertificateUpload";
 
 export default function RegisterPage() {
   // const { token } = useParams();
@@ -42,6 +43,20 @@ export default function RegisterPage() {
   const [price, setPrice] = useState(0.0);
   const [hasAcceptedFinalLock, setHasAcceptedFinalLock] = useState(false);
   const [finalConsentError, setFinalConsentError] = useState("");
+  const [certificate, setCertificate] = useState(null);
+  const certificateStatus = certificate?.status || "missing";
+  const certificateBadge = certificateStatus === "uploaded"
+    ? { className: styles.badgeCertReady, label: "Certificato caricato" }
+    : certificateStatus === "loading"
+      ? { className: styles.badgeCertReview, label: "Certificato in revisione" }
+      : { className: styles.badgeCertPending, label: "Certificato da caricare" };
+  const emailBadgeClass = emailVerified ? styles.badgeEmailOk : styles.badgeEmailWarn;
+  const dataBadgeClass = backDisabled ? styles.badgeDataLocked : styles.badgeDataEditable;
+  const summaryTitle = backDisabled ? "Iscrizione completata" : "Riepilogo dati";
+  const summaryDescription = backDisabled
+    ? "I tuoi dati sono stati bloccati e non sono più modificabili."
+    : "Rivedi con attenzione ogni informazione prima della conferma definitiva.";
+  const summaryEyebrow = backDisabled ? "Grazie!" : "Quasi fatto";
   const router = useRouter();
 
   // Phase 1 state (account creation)
@@ -71,6 +86,7 @@ export default function RegisterPage() {
           setStep("summary");
         }
         setBackDisabled(!userData.info.can_edit);
+        setCertificate(userData.info.medical_certificate || { status: "missing" });
       } catch (error) {
         toast.error("Errore nel caricamento dati: " + error.message);
       } finally {
@@ -167,6 +183,10 @@ export default function RegisterPage() {
       toast.error("Devi verificare la tua email prima di procedere.");
       return;
     }
+    if (certificate?.status !== "uploaded") {
+      toast.error("Carica prima il certificato medico in PDF.");
+      return;
+    }
     try {
       await submitRegistration();
       setBackDisabled(true);
@@ -215,30 +235,26 @@ export default function RegisterPage() {
 
         {step === "summary" && data && (
           <>
-            <div className={styles.summaryHeader}>
-              <div>
-                {!backDisabled ? (
-                  <>
-                    <h2>Riepilogo dati</h2>
-                    <p className={styles.subtitle}>Rivedi con attenzione ogni informazione prima della conferma definitiva.</p>
-                  </>
-                ) : (
-                  <>
-                    <h2>Iscrizione completata</h2>
-                    <p className={styles.subtitle}>I tuoi dati sono stati bloccati e non sono più modificabili.</p>
-                  </>
-                )}
-                <div className={styles.statusRow}>
-                  <span className={`${styles.badge} ${emailVerified ? styles.badgeSuccess : styles.badgeWarning}`}>
+            <div className={styles.summaryHero}>
+              <div className={styles.summaryIntro}>
+                <span className={styles.summaryEyebrow}>{summaryEyebrow}</span>
+                <h2>{summaryTitle}</h2>
+                <p className={styles.subtitle}>{summaryDescription}</p>
+                <div className={styles.summaryStatus}>
+                  <span className={`${styles.badge} ${emailBadgeClass}`}>
                     {emailVerified ? "Email verificata" : "Email da verificare"}
                   </span>
-                  <span className={`${styles.badge} ${backDisabled ? styles.badgeMuted : styles.badgeInfo}`}>
+                  <span className={`${styles.badge} ${dataBadgeClass}`}>
                     {backDisabled ? "Dati bloccati" : "Ancora modificabili"}
                   </span>
+                  <span className={`${styles.badge} ${certificateBadge.className}`}>
+                    {certificateBadge.label}
+                  </span>
                 </div>
+                <p className={styles.certificateNote}>Il certificato medico si puo caricare o aggiornare anche dopo aver bloccato i dati principali.</p>
               </div>
               <div className={styles.summaryVisual}>
-                <Image src="/globe.svg" alt="Profilo" width={96} height={96} />
+                <Image src="/globe.svg" alt="Profilo" width={120} height={120} />
               </div>
             </div>
 
@@ -270,13 +286,17 @@ export default function RegisterPage() {
                 </div>
               </section>
             )}
-
+            <div className={styles.certificateSection}>
+              <MedicalCertificateUpload certificate={certificate} onChange={setCertificate} locked={backDisabled} />
+            </div>
             {confirmError && <p className={styles.error}>{confirmError}</p>}
             {!emailVerified && (
               <div className={styles.alertBox}>
                 <h3>Verifica email richiesta</h3>
                 <p>Per confermare devi aprire il link ricevuto via email. Al termine potrai proseguire con il pagamento.</p>
-                <a href="/verify-email-resend" className="button secondary" onClick={handleResendVerification}>Reinvia email di verifica</a>
+                <div className={styles.resendLink}>
+                  <a href="/verify-email-resend" className="button secondary" onClick={handleResendVerification}>Reinvia email di verifica</a>
+                </div>
               </div>
             )}
 
@@ -287,7 +307,7 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <h3>Conferma definitiva dei dati</h3>
-                  <p className={styles.subtitle}>Una volta confermato non potrai più modificare le informazioni inserite. Usa il tasto indietro se devi correggere qualcosa.</p>
+                  <p className={styles.subtitle}>Una volta confermato non potrai piu modificare le informazioni inserite, ma il certificato medico restera sempre caricabile e sostituibile.</p>
                   <label className={styles.consentCheckbox}>
                     <input
                       type="checkbox"
@@ -309,7 +329,7 @@ export default function RegisterPage() {
                   <button
                     className="button"
                     onClick={handleConfirmData}
-                    disabled={!emailVerified || !hasAcceptedFinalLock || confirmingSession}
+                    disabled={!emailVerified || !hasAcceptedFinalLock || confirmingSession || certificate?.status !== "uploaded"}
                   >
                     Conferma dati
                   </button>
@@ -321,7 +341,7 @@ export default function RegisterPage() {
                   amount={price}
                   onSuccess={handlePaid}
                   customerEmail={data.email}
-                  disabled={confirmingSession}
+                  disabled={confirmingSession || certificate?.status !== "uploaded"}
                   metadata={{
                     nome: data.nome,
                     cognome: data.cognome,

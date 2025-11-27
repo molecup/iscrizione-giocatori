@@ -3,14 +3,13 @@
 .loadingCard { text-align: center; padding: 48px 0; }
 .subtitle { color: var(--muted); margin: 4px 0 12px; }
 .error { color: #dc2626; font-size: 13px; margin-top: 6px; }
-.summaryHeader { display: flex; justify-content: space-between; gap: 24px; align-items: center; flex-wrap: wrap; }
-.summaryVisual { background: var(--surface-soft); border-radius: 16px; padding: 12px; }
-.statusRow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.badge { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 12px; }
-.badgeSuccess { background: var(--success-bg); color: var(--success-fg); }
-.badgeWarning { background: var(--warning-bg); color: var(--warning-fg); }
-.badgeInfo { background: #e0f2fe; color: #075985; }
-.badgeMuted { background: var(--hover); color: var(--foreground); }
+.summaryHero { display: flex; align-items: center; justify-content: space-between; gap: 32px; padding: 24px; border-radius: 20px; border: 1px solid var(--border); background: linear-gradient(135deg, var(--card), var(--surface-soft)); flex-wrap: wrap; }
+.summaryIntro { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 8px; }
+.summaryEyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.16em; font-weight: 600; color: var(--muted); }
+.summaryStatus { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+.summaryVisual { flex-shrink: 0; background: var(--card); border-radius: 24px; padding: 16px; box-shadow: 0 20px 35px rgba(15, 23, 42, 0.12); }
+.summaryVisual img { display: block; }
+.certificateNote { font-size: 14px; color: var(--muted); margin-top: 8px; }
 .sectionCard { border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; margin-top: 16px; background: var(--card); }
 .sectionCard h3 { margin-bottom: 12px; }
 .summaryGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 24px; margin: 12px 0 0; }
@@ -18,16 +17,26 @@
 .label { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
 .value { font-weight: 600; }
 .alertBox { border-radius: 16px; padding: 16px 20px; margin-top: 16px; background: var(--warning-bg); border: 1px solid var(--warning-border); color: var(--warning-fg); }
+.resendLink { margin-top: 12px; }
 .finalLock { display: flex; gap: 16px; border-radius: 16px; padding: 20px; border: 1px solid var(--lock-border); background: var(--lock-bg); margin-top: 20px; }
 .finalLockIcon { flex-shrink: 0; background: var(--lock-icon-bg); border-radius: 12px; padding: 10px; display: flex; align-items: center; justify-content: center; }
 .consentCheckbox { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; font-size: 14px; }
 .consentCheckbox input { margin-top: 3px; }
 .actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 24px; }
 .actions > * { flex: 1; min-width: 180px; }
+.certificateSection { margin-top: 24px; }
 .success { text-align: center; padding: 32px 0; }
+.badge { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 12px; }
+.badgeEmailOk { background: #dcfce7; color: #166534; }
+.badgeEmailWarn { background: #fef3c7; color: #92400e; }
+.badgeDataEditable { background: #e0f2fe; color: #075985; }
+.badgeDataLocked { background: #f3f4f6; color: #1f2937; }
+.badgeCertReady { background: #ede9fe; color: #5b21b6; }
+.badgeCertReview { background: #cffafe; color: #155e75; }
+.badgeCertPending { background: #fee2e2; color: #991b1b; }
 @media (max-width: 640px) {
   .card { padding: 24px 16px; }
-  .summaryHeader { flex-direction: column; align-items: flex-start; }
+  .summaryHero { flex-direction: column; align-items: flex-start; padding: 20px; }
   .actions { flex-direction: column; }
   .finalLock { flex-direction: column; }
 }
