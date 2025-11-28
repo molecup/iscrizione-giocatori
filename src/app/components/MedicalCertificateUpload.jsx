@@ -68,7 +68,7 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
     }
   }, [onChange, toast]);
 
-  const showDropzone = !locked;
+  const showLockHint = locked;
   const busy = uploading || effectiveStatus === "loading";
 
   return (
@@ -93,53 +93,49 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
                 Scarica
               </a>
             )}
-            {showDropzone && (
-              <button className="button secondary" onClick={handleDelete} disabled={busy}>
-                Rimuovi
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {showDropzone && (
-        <div
-          className={[styles.dropzone, dragActive ? styles.dropzoneActive : "", busy ? styles.dropzoneDisabled : ""].join(" ")}
-          onDragOver={(e) => {
-            e.preventDefault();
-            if (!busy) setDragActive(true);
-          }}
-          onDragLeave={(e) => {
-            e.preventDefault();
-            setDragActive(false);
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragActive(false);
-            if (busy) return;
-            const file = e.dataTransfer.files?.[0];
-            handleFile(file);
-          }}
-        >
-          <div>
-            <p className={styles.dropTitle}>{busy ? "Attendi..." : "Trascina qui il PDF"}</p>
-            <p className={styles.dropHint}>Oppure seleziona il file dal tuo dispositivo</p>
-            <button className="button ghost" type="button" onClick={() => inputRef.current?.click()} disabled={busy}>
-              Sfoglia file
+            <button className="button secondary" onClick={handleDelete} disabled={busy}>
+              Rimuovi
             </button>
           </div>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="application/pdf"
-            className={styles.hiddenInput}
-            onChange={(e) => handleFile(e.target.files?.[0])}
-            disabled={busy}
-          />
         </div>
       )}
 
-      {!showDropzone && (
+      <div
+        className={[styles.dropzone, dragActive ? styles.dropzoneActive : "", busy ? styles.dropzoneDisabled : ""].join(" ")}
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (!busy) setDragActive(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          setDragActive(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragActive(false);
+          if (busy) return;
+          const file = e.dataTransfer.files?.[0];
+          handleFile(file);
+        }}
+      >
+        <div>
+          <p className={styles.dropTitle}>{busy ? "Attendi..." : "Trascina qui il PDF"}</p>
+          <p className={styles.dropHint}>Oppure seleziona il file dal tuo dispositivo</p>
+          <button className="button ghost" type="button" onClick={() => inputRef.current?.click()} disabled={busy}>
+            Sfoglia file
+          </button>
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/pdf"
+          className={styles.hiddenInput}
+          onChange={(e) => handleFile(e.target.files?.[0])}
+          disabled={busy}
+        />
+      </div>
+
+      {showLockHint && (
         <p className={styles.lockedMessage}>{LOCK_HINT}</p>
       )}
     </div>
