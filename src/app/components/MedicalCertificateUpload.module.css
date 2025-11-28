@@ -6,6 +6,8 @@
 .badgeSuccess { background: var(--success-bg); color: var(--success-fg); }
 .badgeWarning { background: var(--warning-bg); color: var(--warning-fg); }
 .badgeInfo { background: #e0f2fe; color: #075985; }
+.demoBanner { background: #fff7e6; color: #854d0e; padding: 8px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+.demoNote { font-size: 12px; color: var(--muted); text-align: center; }
 .fileInfo { border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .fileActions { display: flex; gap: 8px; }
 .dropzone { border: 2px dashed var(--border); border-radius: 12px; padding: 24px; text-align: center; transition: border-color 0.2s, background 0.2s; }

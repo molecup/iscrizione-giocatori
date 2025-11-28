@@ -377,3 +377,24 @@ export async function deleteMedicalCertificate() {
     }
     return await res.json();
 }
+
+export async function confirmMedicalCertificate() {
+    const session = await verifySession();
+    if (!session.playerId) {
+        throw new Error("Permessi insufficienti");
+    }
+    const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/confirm/";
+    const res = await fetch(request, {
+        method: "POST",
+        headers: {
+            'Authorization': 'Bearer ' + session.token,
+            'Content-Type': 'application/json'
+        },
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const errorMessage = Object.values(err).flat().join(", ");
+        throw new Error(errorMessage || "Errore sconosciuto");
+    }
+    return await res.json();
+}

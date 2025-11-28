@@ -1,15 +1,17 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import RegisterForm from "@app/components/RegisterForm";
 import PaymentButton from "@app/components/PaymentButton";
 import styles from "./page.module.css";
 import { useToast } from "@app/components/ToastProvider";
-import { getUserData, updateSinglePlayer, submitRegistration, sendVerificationEmail } from "@app/lib/api";
+import { getUserData, updateSinglePlayer, submitRegistration, sendVerificationEmail, confirmMedicalCertificate } from "@app/lib/api";
 import { useRouter } from "next/navigation";
 import { getUserPermissions } from "@app/lib/auth";
 import MedicalCertificateUpload from "@app/components/MedicalCertificateUpload";
+
+const ALLOW_FAKE_CERT = process.env.NEXT_PUBLIC_ALLOW_FAKE_MED_CERT === "true";
 
 export default function RegisterPage() {
   // const { token } = useParams();
@@ -45,6 +47,9 @@ export default function RegisterPage() {
   const [finalConsentError, setFinalConsentError] = useState("");
   const [certificate, setCertificate] = useState(null);
   const certificateStatus = certificate?.status || "missing";
+  const certificateLockedManually = certificate?.locked === true;
+  const canLockCertificate = certificateStatus === "uploaded" && !certificateLockedManually;
+  const isCertificateLocked = backDisabled || certificateLockedManually;
   const certificateBadge = certificateStatus === "uploaded"
     ? { className: styles.badgeCertReady, label: "Certificato caricato" }
     : certificateStatus === "loading"
@@ -205,6 +210,29 @@ export default function RegisterPage() {
     }
   };
 
+  const handleConfirmCertificate = useCallback(async () => {
+    if (ALLOW_FAKE_CERT) {
+      setCertificate((prev) => ({
+        ...(prev || {}),
+        status: "uploaded",
+        locked: true,
+        lockedAt: new Date().toISOString(),
+        fileName: prev?.fileName || "certificato-simulato.pdf",
+        uploadedAt: prev?.uploadedAt || new Date().toISOString(),
+      }));
+      toast.success("Certificato confermato (simulato).");
+      return;
+    }
+    try {
+      const payload = await confirmMedicalCertificate();
+      setCertificate(payload);
+      toast.success("Certificato confermato correttamente.");
+    } catch (error) {
+      toast.error(error.message || "Errore nella conferma del certificato.");
+      throw error;
+    }
+  }, [ALLOW_FAKE_CERT, toast]);
+
   if (loadingPrefill) {
     return (
       <div className={styles.wrapper}>
@@ -251,7 +279,9 @@ export default function RegisterPage() {
                     {certificateBadge.label}
                   </span>
                 </div>
-                <p className={styles.certificateNote}>Il certificato medico si puo caricare o aggiornare anche dopo aver bloccato i dati principali.</p>
+                <p className={styles.certificateNote}>
+                  {backDisabled ? "Il certificato è stato confermato e non può più essere modificato." : "Il certificato medico si può caricare finché l'iscrizione non viene bloccata."}
+                </p>
               </div>
               <div className={styles.summaryVisual}>
                 <Image src="/globe.svg" alt="Profilo" width={120} height={120} />
@@ -287,7 +317,21 @@ export default function RegisterPage() {
               </section>
             )}
             <div className={styles.certificateSection}>
-              <MedicalCertificateUpload certificate={certificate} onChange={setCertificate} locked={backDisabled} />
+              {!isCertificateLocked ? (
+                <MedicalCertificateUpload
+                  certificate={certificate}
+                  onChange={setCertificate}
+                  locked={false}
+                  canLock={canLockCertificate}
+                  onConfirmCertificate={handleConfirmCertificate}
+                />
+              ) : (
+                <div className={styles.certificateSummary}>
+                  <h4>Certificato medico confermato</h4>
+                  <p>Caricato il {certificate?.uploadedAt ? new Date(certificate.uploadedAt).toLocaleDateString("it-IT") : "-"}.</p>
+                  {certificate?.fileName && <p>File: {certificate.fileName}</p>}
+                </div>
+              )}
             </div>
             {confirmError && <p className={styles.error}>{confirmError}</p>}
             {!emailVerified && (
@@ -307,7 +351,7 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <h3>Conferma definitiva dei dati</h3>
-                  <p className={styles.subtitle}>Una volta confermato non potrai piu modificare le informazioni inserite, ma il certificato medico restera sempre caricabile e sostituibile.</p>
+                  <p className={styles.subtitle}>Una volta confermato non potrai più modificare le informazioni inserite né sostituire il certificato medico.</p>
                   <label className={styles.consentCheckbox}>
                     <input
                       type="checkbox"
@@ -329,7 +373,7 @@ export default function RegisterPage() {
                   <button
                     className="button"
                     onClick={handleConfirmData}
-                    disabled={!emailVerified || !hasAcceptedFinalLock || confirmingSession || certificate?.status !== "uploaded"}
+                    disabled={!emailVerified || !hasAcceptedFinalLock || confirmingSession || certificate?.locked !== true}
                   >
                     Conferma dati
                   </button>
@@ -341,7 +385,7 @@ export default function RegisterPage() {
                   amount={price}
                   onSuccess={handlePaid}
                   customerEmail={data.email}
-                  disabled={confirmingSession || certificate?.status !== "uploaded"}
+                  disabled={confirmingSession || certificate?.locked !== true}
                   metadata={{
                     nome: data.nome,
                     cognome: data.cognome,

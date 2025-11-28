@@ -1,61 +1,18 @@
-import { NextResponse } from "next/server";
 import path from "path";
 import { promises as fs } from "fs";
+import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { verifySession } from "@app/lib/sessions";
+import {
+  ensureDirs,
+  getRecord,
+  requirePlayerSession,
+  sanitizeFileName,
+  serialize,
+  writeMetadata,
+  FILES_DIR,
+} from "@app/api/medical-certificate/utils";
 
-const STORAGE_ROOT = path.join(process.cwd(), "tmp", "medical-certificates");
-const FILES_DIR = path.join(STORAGE_ROOT, "files");
-const META_FILE = path.join(STORAGE_ROOT, "metadata.json");
 const MAX_FILE_SIZE = Number(process.env.MEDICAL_CERTIFICATE_MAX_BYTES || 5 * 1024 * 1024);
-
-async function ensureDirs() {
-  await fs.mkdir(FILES_DIR, { recursive: true });
-}
-
-async function readMetadata() {
-  try {
-    const raw = await fs.readFile(META_FILE, "utf-8");
-    return JSON.parse(raw);
-  } catch (error) {
-    return {};
-  }
-}
-
-async function writeMetadata(meta) {
-  await fs.mkdir(STORAGE_ROOT, { recursive: true });
-  await fs.writeFile(META_FILE, JSON.stringify(meta, null, 2), "utf-8");
-}
-
-function serialize(record) {
-  if (!record) {
-    return { status: "missing" };
-  }
-  return {
-    status: record.status || "uploaded",
-    fileName: record.originalName,
-    uploadedAt: record.uploadedAt,
-    size: record.size,
-    downloadUrl: record.storedFile ? `/api/medical-certificate?file=${record.storedFile}` : null,
-  };
-}
-
-async function requirePlayerSession() {
-  const session = await verifySession();
-  if (!session?.playerId) {
-    throw new NextResponse(JSON.stringify({ error: "Non autorizzato" }), { status: 401 });
-  }
-  return session;
-}
-
-async function getRecord(playerId) {
-  const meta = await readMetadata();
-  return { record: meta[playerId], meta };
-}
-
-function sanitizeFileName(name = "certificato.pdf") {
-  return name.replace(/[^a-z0-9_\-. ]/gi, "_");
-}
 
 export async function GET(request) {
   let session;
@@ -132,6 +89,7 @@ export async function POST(request) {
     uploadedAt: new Date().toISOString(),
     size: file.size,
     status: "uploaded",
+    locked: false,
   };
   await writeMetadata(meta);
 
@@ -151,6 +109,10 @@ export async function DELETE() {
     return NextResponse.json({ status: "missing" });
   }
 
+  if (record?.locked) {
+    return NextResponse.json({ error: "Certificato già confermato" }, { status: 400 });
+  }
+
   if (record.storedFile) {
     const filePath = path.join(FILES_DIR, record.storedFile);
     await fs.unlink(filePath).catch(() => null);
@@ -161,4 +123,3 @@ export async function DELETE() {
 
   return NextResponse.json({ status: "missing" }, { status: 200 });
 }
-

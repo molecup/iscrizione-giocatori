@@ -4,9 +4,14 @@ import styles from "./MedicalCertificateUpload.module.css";
 import { useToast } from "@app/components/ToastProvider";
 
 const MAX_BYTES = Number(process.env.NEXT_PUBLIC_MED_CERT_MAX_BYTES || 5 * 1024 * 1024);
-const LOCK_HINT = "Puoi caricare o sostituire il certificato anche dopo aver bloccato i dati.";
+const CARD_SUBTITLE = "Serve il PDF firmato dal medico per completare l'iscrizione.";
+const PRE_LOCK_HINT = "Carica il PDF firmato prima di confermare i dati.";
+const POST_UPLOAD_HINT = "Il certificato resta modificabile finché non lo confermi manualmente.";
+const LOCKED_HINT = "Certificato confermato: per modifiche contatta la segreteria.";
+const ALLOW_FAKE_UPLOAD = process.env.NEXT_PUBLIC_ALLOW_FAKE_MED_CERT === "true";
+const TOAST_FAKE_HINT = "Modalità demo certificato attiva";
 
-export default function MedicalCertificateUpload({ certificate, onChange, locked = false }) {
+export default function MedicalCertificateUpload({ certificate, onChange, locked = false, onConfirmCertificate, canLock = false }) {
   const toast = useToast();
   const inputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
@@ -16,6 +21,7 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
   const statusMeta = useMemo(() => statusConfig[effectiveStatus] || statusConfig.missing, [effectiveStatus]);
 
   const handleFile = useCallback(async (file) => {
+    if (locked) return;
     if (!file) return;
     if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
       toast.error("Carica un file PDF valido.");
@@ -48,9 +54,10 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
     }
-  }, [onChange, toast]);
+  }, [locked, onChange, toast]);
 
   const handleDelete = useCallback(async () => {
+    if (locked) return;
     setUploading(true);
     try {
       const res = await fetch("/api/medical-certificate", { method: "DELETE" });
@@ -66,17 +73,62 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
     } finally {
       setUploading(false);
     }
-  }, [onChange, toast]);
+  }, [locked, onChange, toast]);
 
-  const showLockHint = locked;
+  const handleConfirmClick = useCallback(async () => {
+    if (ALLOW_FAKE_UPLOAD) {
+      onChange?.({
+        ...(certificate || {}),
+        status: "uploaded",
+        locked: true,
+        lockedAt: new Date().toISOString(),
+        fileName: certificate?.fileName || "certificato-simulato.pdf",
+        uploadedAt: certificate?.uploadedAt || new Date().toISOString(),
+        size: certificate?.size || 512000,
+        downloadUrl: certificate?.downloadUrl || "#",
+      });
+      toast.success("Certificato confermato (simulato).");
+      return;
+    }
+    if (!onConfirmCertificate) return;
+    setUploading(true);
+    try {
+      await onConfirmCertificate();
+    } finally {
+      setUploading(false);
+    }
+  }, [ALLOW_FAKE_UPLOAD, certificate, onChange, onConfirmCertificate, toast]);
+
+  const simulateUpload = useCallback(() => {
+    if (!ALLOW_FAKE_UPLOAD || locked) return;
+    setUploading(true);
+    setTimeout(() => {
+      onChange?.({
+        status: "uploaded",
+        fileName: "certificato-simulato.pdf",
+        uploadedAt: new Date().toISOString(),
+        size: 512000,
+        downloadUrl: "#",
+      });
+      toast.success("Certificato simulato (solo test).");
+      setUploading(false);
+    }, 600);
+  }, [locked, onChange, toast]);
+
   const busy = uploading || effectiveStatus === "loading";
+  const disabled = locked || busy;
+  const helperText = locked ? LOCKED_HINT : (certificate?.status === "uploaded" ? POST_UPLOAD_HINT : PRE_LOCK_HINT);
 
   return (
     <div className={styles.card} aria-live="polite">
+      {ALLOW_FAKE_UPLOAD && (
+        <p className={styles.demoBanner}>{TOAST_FAKE_HINT}</p>
+      )}
+
       <header className={styles.header}>
         <div>
           <h3>Certificato medico agonistico</h3>
-          <p className={styles.subtitle}>Serve il PDF firmato dal medico per completare l&apos;iscrizione. {LOCK_HINT}</p>
+          <p className={styles.subtitle}>{CARD_SUBTITLE}</p>
         </div>
         <span className={`${styles.badge} ${styles[statusMeta.tone]}`}>{statusMeta.label}</span>
       </header>
@@ -93,18 +145,26 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
                 Scarica
               </a>
             )}
-            <button className="button secondary" onClick={handleDelete} disabled={busy}>
-              Rimuovi
-            </button>
+            {!locked && (
+              <button className="button secondary" onClick={handleDelete} disabled={disabled}>
+                Rimuovi
+              </button>
+            )}
+            {!locked && canLock && (
+              <button className="button" onClick={handleConfirmClick} disabled={disabled}>
+                {ALLOW_FAKE_UPLOAD ? "Conferma simulata" : "Conferma certificato"}
+              </button>
+            )}
           </div>
         </div>
       )}
 
       <div
-        className={[styles.dropzone, dragActive ? styles.dropzoneActive : "", busy ? styles.dropzoneDisabled : ""].join(" ")}
+        className={[styles.dropzone, dragActive ? styles.dropzoneActive : "", disabled ? styles.dropzoneDisabled : ""].join(" ")}
         onDragOver={(e) => {
           e.preventDefault();
-          if (!busy) setDragActive(true);
+          if (disabled) return;
+          setDragActive(true);
         }}
         onDragLeave={(e) => {
           e.preventDefault();
@@ -113,17 +173,28 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
         onDrop={(e) => {
           e.preventDefault();
           setDragActive(false);
-          if (busy) return;
+          if (disabled) return;
           const file = e.dataTransfer.files?.[0];
           handleFile(file);
         }}
       >
         <div>
-          <p className={styles.dropTitle}>{busy ? "Attendi..." : "Trascina qui il PDF"}</p>
-          <p className={styles.dropHint}>Oppure seleziona il file dal tuo dispositivo</p>
-          <button className="button ghost" type="button" onClick={() => inputRef.current?.click()} disabled={busy}>
+          <p className={styles.dropTitle}>{disabled ? (locked ? "Bloccato" : "Attendi...") : "Trascina qui il PDF"}</p>
+          <p className={styles.dropHint}>{locked ? "Certificato non più modificabile" : "Oppure seleziona il file dal tuo dispositivo"}</p>
+          <button className="button ghost" type="button" onClick={() => inputRef.current?.click()} disabled={disabled}>
             Sfoglia file
           </button>
+          {ALLOW_FAKE_UPLOAD && !locked && (
+            <button
+              className="button secondary"
+              type="button"
+              onClick={simulateUpload}
+              disabled={disabled}
+              title="Disponibile solo in sviluppo"
+            >
+              Simula caricamento
+            </button>
+          )}
         </div>
         <input
           ref={inputRef}
@@ -131,12 +202,15 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
           accept="application/pdf"
           className={styles.hiddenInput}
           onChange={(e) => handleFile(e.target.files?.[0])}
-          disabled={busy}
+          disabled={disabled}
         />
       </div>
 
-      {showLockHint && (
-        <p className={styles.lockedMessage}>{LOCK_HINT}</p>
+      {helperText && (
+        <p className={styles.lockedMessage}>{helperText}</p>
+      )}
+      {ALLOW_FAKE_UPLOAD && (
+        <p className={styles.demoNote}>Operazioni simulate, nessun dato viene inviato al server.</p>
       )}
     </div>
   );
