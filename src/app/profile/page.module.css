@@ -37,9 +37,31 @@
 .badgeCertReady { background: #ede9fe; color: #5b21b6; }
 .badgeCertReview { background: #cffafe; color: #155e75; }
 .badgeCertPending { background: #fee2e2; color: #991b1b; }
-@media (max-width: 640px) {
+.paymentInfo { margin-top: 24px; font-weight: 600; }
+.paymentMessage { margin-top: 6px; font-size: 14px; }
+.paymentMessageSuccess { color: #166534; }
+.paymentMessageWarn { color: #92400e; }
+.paymentMessageError { color: #b91c1c; }
+.badgePaymentOk { background: #dcfce7; color: #166534; }
+.badgePaymentWarn { background: #fee2e2; color: #991b1b; }
+.badgePaymentInfo { background: #dbeafe; color: #1d4ed8; }
+.paymentCallout { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:20px 24px; border-radius:18px; border:1px solid transparent; margin-top:24px; }
+.paymentCalloutText { flex:1; }
+.paymentEyebrow { text-transform:uppercase; font-size:11px; letter-spacing:0.15em; font-weight:600; display:block; margin-bottom:4px; color:var(--muted); }
+.paymentCalloutAmount { text-align:right; min-width:180px; }
+.paymentCalloutSuccess { background:var(--success-bg); border-color:var(--success-border); color:var(--success-fg); }
+.paymentCalloutPending { background:var(--info-bg); border-color:var(--info-border); color:var(--info-fg); }
+.paymentCalloutError { background:var(--danger-bg); border-color:var(--danger-border); color:var(--danger-fg); }
+.paymentCalloutError .paymentEyebrow,
+.paymentCalloutPending .paymentEyebrow,
+.paymentCalloutSuccess .paymentEyebrow { color:inherit; opacity:0.85; }
+.paymentCalloutAmount span { display:block; font-size:13px; color:inherit; opacity:0.7; }
+.paymentCalloutAmount strong { font-size:28px; line-height:1.2; color:inherit; }
+@media (max-width:640px){
   .card { padding: 24px 16px; }
   .summaryHero { flex-direction: column; align-items: flex-start; padding: 20px; }
   .actions { flex-direction: column; }
   .finalLock { flex-direction: column; }
+  .paymentCallout { flex-direction:column; align-items:flex-start; }
+  .paymentCalloutAmount { width:100%; text-align:left; }
 }

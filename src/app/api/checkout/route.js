@@ -31,18 +31,13 @@ export async function POST(request) {
     const origin = url.origin; // e.g., http://localhost:3000
     const referer = request.headers.get("referer") || "";
 
-    // Try to extract /register/[token] from the referer
-    let successUrl = `${origin}`;
-    let cancelUrl = `${origin}`;
-    const match = referer.match(/\/register\/([^/?#]+)/);
-    if (match && match[1]) {
-      const token = match[1];
+    let successUrl = `${origin}/profile?session_id={CHECKOUT_SESSION_ID}`;
+    let cancelUrl = `${origin}/profile?canceled=1`;
+    const registerMatch = referer.match(/\/register\/([^/?#]+)/);
+    if (registerMatch && registerMatch[1]) {
+      const token = registerMatch[1];
       successUrl = `${origin}/register/${token}?session_id={CHECKOUT_SESSION_ID}`;
       cancelUrl = `${origin}/register/${token}?canceled=1`;
-    } else {
-      // Fallback generic URLs
-      successUrl = `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
-      cancelUrl = `${origin}/?checkout=canceled`;
     }
 
     const session = await stripe.checkout.sessions.create({

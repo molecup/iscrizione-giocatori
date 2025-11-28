@@ -46,6 +46,8 @@ export default function RegisterPage() {
   const [hasAcceptedFinalLock, setHasAcceptedFinalLock] = useState(false);
   const [finalConsentError, setFinalConsentError] = useState("");
   const [certificate, setCertificate] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [paymentMessage, setPaymentMessage] = useState("");
   const certificateStatus = certificate?.status || "missing";
   const certificateLockedManually = certificate?.locked === true;
   const canLockCertificate = certificateStatus === "uploaded" && !certificateLockedManually;
@@ -57,13 +59,54 @@ export default function RegisterPage() {
       : { className: styles.badgeCertPending, label: "Certificato da caricare" };
   const emailBadgeClass = emailVerified ? styles.badgeEmailOk : styles.badgeEmailWarn;
   const dataBadgeClass = backDisabled ? styles.badgeDataLocked : styles.badgeDataEditable;
-  const summaryTitle = backDisabled ? "Iscrizione completata" : "Riepilogo dati";
-  const summaryDescription = backDisabled
-    ? "I tuoi dati sono stati bloccati e non sono più modificabili."
-    : "Rivedi con attenzione ogni informazione prima della conferma definitiva.";
-  const summaryEyebrow = backDisabled ? "Grazie!" : "Quasi fatto";
+  const requiresPayment = price > 0;
+  const paymentComplete = !requiresPayment || paymentStatus === "paid";
+  const summaryTitle = paymentComplete
+    ? "Iscrizione completata"
+    : backDisabled
+      ? "Ultimo passo: completa il pagamento"
+      : "Riepilogo dati";
+  const summaryDescription = paymentComplete
+    ? "Abbiamo ricevuto tutto ciò che serve. Puoi rivedere i dati in qualsiasi momento."
+    : backDisabled
+      ? "Hai appena bloccato i dati: completa il pagamento per chiudere l'iscrizione."
+      : "Ricontrolla le informazioni e bloccale solo quando sei sicuro al 100%.";
+  const summaryEyebrow = paymentComplete ? "Grazie!" : backDisabled ? "Ancora un passo" : "Quasi fatto";
+  const paymentBadge = !requiresPayment
+    ? { className: styles.badgePaymentOk, label: "Quota non dovuta" }
+    : paymentStatus === "paid"
+      ? { className: styles.badgePaymentOk, label: "Pagamento registrato" }
+      : paymentStatus === "failed" || paymentStatus === "canceled"
+        ? { className: styles.badgePaymentWarn, label: "Pagamento da riprovare" }
+        : paymentStatus === "processing"
+          ? { className: styles.badgePaymentInfo, label: "Pagamento in verifica" }
+          : { className: styles.badgePaymentWarn, label: "Pagamento mancante" };
+  const paymentMessageTone = paymentStatus === "paid" || paymentStatus === "not_required"
+    ? styles.paymentMessageSuccess
+    : paymentStatus === "failed" || paymentStatus === "canceled"
+      ? styles.paymentMessageError
+      : styles.paymentMessageWarn;
   const router = useRouter();
-
+  const paymentCalloutClass = !requiresPayment || paymentStatus === "paid"
+    ? styles.paymentCalloutSuccess
+    : paymentStatus === "failed" || paymentStatus === "canceled"
+      ? styles.paymentCalloutError
+      : styles.paymentCalloutPending;
+  const paymentCalloutTitle = !requiresPayment
+    ? "Nessun pagamento richiesto"
+    : paymentStatus === "paid"
+      ? "Quota saldata"
+      : backDisabled
+        ? "Serve ancora il pagamento"
+        : "Prima blocca i dati";
+  const paymentCalloutBody = !requiresPayment
+    ? "Il club copre la quota di iscrizione, non è necessario alcun versamento."
+    : paymentStatus === "paid"
+      ? "Abbiamo registrato il pagamento e l'iscrizione è completa."
+      : backDisabled
+        ? "Premi sul pulsante qui sotto per aprire Stripe e saldare la quota."
+        : "Verifica l'email e blocca i dati per sbloccare il pagamento.";
+  const formattedPrice = Number(price || 0).toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Phase 1 state (account creation)
 
   const [loadingPrefill, setLoadingPrefill] = useState(true);
@@ -86,7 +129,11 @@ export default function RegisterPage() {
           ...userData.formData
         });
         setEmailVerified(userData.info.email_verified);
-        setPrice(userData.info.registration_fee);
+        const registrationFee = Number(userData.info.registration_fee || 0);
+        setPrice(registrationFee);
+        const initialPaymentStatus = registrationFee > 0 ? userData.info.payment_status || "pending" : "not_required";
+        setPaymentStatus(initialPaymentStatus);
+        setPaymentMessage(initialPaymentStatus === "paid" ? "Pagamento già registrato." : "");
         if (userData.info.is_complete) {
           setStep("summary");
         }
@@ -106,6 +153,7 @@ export default function RegisterPage() {
     const canceled = searchParams?.get("canceled");
     if (sessionId) {
       setConfirmError(null);
+      setPaymentMessage("");
       setConfirmingSession(true);
       (async () => {
         try {
@@ -118,19 +166,28 @@ export default function RegisterPage() {
             const err = await resp.json().catch(() => ({}));
             throw new Error(err?.error || "Pagamento non verificato");
           }
-          setStep("done");
+          setPaymentStatus("paid");
+          setPaymentMessage("Pagamento registrato con successo.");
+          toast.success("Pagamento registrato con successo.");
+          setStep("summary");
         } catch (err) {
+          setPaymentStatus("failed");
           setConfirmError(err.message || "Impossibile verificare il pagamento");
+          setPaymentMessage("Non siamo riusciti a verificare il pagamento. Riprova.");
           toast.error("Conferma pagamento fallita");
         } finally {
           setConfirmingSession(false);
+          router.replace("/profile");
         }
       })();
     } else if (canceled === "1") {
       setStep("summary");
+      setPaymentStatus("canceled");
+      setPaymentMessage("Pagamento annullato. Puoi riprovare quando vuoi.");
       toast.error("Pagamento annullato");
+      router.replace("/profile");
     }
-  }, [searchParams, toast]);
+  }, [router, searchParams, toast]);
 
   // const validateAccount = () => {
   //   const e = {};
@@ -195,6 +252,11 @@ export default function RegisterPage() {
     try {
       await submitRegistration();
       setBackDisabled(true);
+      toast.success(requiresPayment ? "Dati confermati. Completa il pagamento per concludere." : "Iscrizione completata.");
+      if (!requiresPayment) {
+        setPaymentStatus("paid");
+        setPaymentMessage("Quota non dovuta, iscrizione completata.");
+      }
     } catch (error) {
       toast.error("Errore: " + error.message);
     }
@@ -277,6 +339,9 @@ export default function RegisterPage() {
                   </span>
                   <span className={`${styles.badge} ${certificateBadge.className}`}>
                     {certificateBadge.label}
+                  </span>
+                  <span className={`${styles.badge} ${paymentBadge.className}`}>
+                    {paymentBadge.label}
                   </span>
                 </div>
                 <p className={styles.certificateNote}>
@@ -366,6 +431,23 @@ export default function RegisterPage() {
               </div>
             )}
 
+            <div className={`${styles.paymentCallout} ${paymentCalloutClass}`}>
+              <div className={styles.paymentCalloutText}>
+                <span className={styles.paymentEyebrow}>Pagamento</span>
+                <h3>{paymentCalloutTitle}</h3>
+                <p>{paymentCalloutBody}</p>
+                {paymentMessage && (
+                  <p className={`${styles.paymentMessage} ${paymentMessageTone}`}>{paymentMessage}</p>
+                )}
+              </div>
+              {requiresPayment && (
+                <div className={styles.paymentCalloutAmount}>
+                  <span>Da versare</span>
+                  <strong>{formattedPrice} €</strong>
+                </div>
+              )}
+            </div>
+
             <div className={styles.actions}>
               {!backDisabled && (
                 <>
@@ -373,19 +455,18 @@ export default function RegisterPage() {
                   <button
                     className="button"
                     onClick={handleConfirmData}
-                    disabled={!emailVerified || !hasAcceptedFinalLock || confirmingSession || certificate?.locked !== true}
+                    disabled={!emailVerified || !hasAcceptedFinalLock || confirmingSession || certificateStatus !== "uploaded"}
                   >
                     Conferma dati
                   </button>
                 </>
               )}
 
-              {price > 0.0 && (
+              {requiresPayment && paymentStatus !== "paid" && (
                 <PaymentButton
                   amount={price}
-                  onSuccess={handlePaid}
                   customerEmail={data.email}
-                  disabled={confirmingSession || certificate?.locked !== true}
+                  disabled={!backDisabled || confirmingSession}
                   metadata={{
                     nome: data.nome,
                     cognome: data.cognome,

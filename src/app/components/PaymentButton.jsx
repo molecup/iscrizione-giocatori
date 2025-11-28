@@ -4,7 +4,7 @@ import { useToast } from "./ToastProvider";
 import { useState } from "react";
 
 
-export default function PaymentButton({ amount = 50, onSuccess, customerEmail, metadata, disabled = false }) {
+export default function PaymentButton({ amount = 50, customerEmail, metadata, disabled = false }) {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
   const handlePay = async () => {
