@@ -125,6 +125,11 @@ export default function RegisterPage() {
     (async () => {
       try {
         const userData = await getUserData();
+        if (!userData.ok) {
+          toast.error("Errore caricamento dati utente: " + (userData.error || "Errore sconosciuto"));
+          setLoadingPrefill(false);
+          return;
+        }
         setData({
           ...userData.formData
         });
@@ -214,12 +219,16 @@ export default function RegisterPage() {
   const handlePlayerSubmit = async (formData, isMinor) => {
     // setData(formData);
     try {
-      await updateSinglePlayer(formData, isMinor);
+      const res = await updateSinglePlayer(formData, isMinor);
+      if (!res.ok) {
+        toast.error("Errore salvataggio dati: " + (res.error || "Errore sconosciuto"));
+        return;
+      }
       setHasAcceptedFinalLock(false);
       setFinalConsentError("");
       setStep("summary");
     } catch (error) {
-      toast.error("Errore: " + error.message);
+      toast.error("Errore salvataggio dati.");
     }
   };
 
@@ -235,6 +244,7 @@ export default function RegisterPage() {
 
   const handleConfirmData = async (e) => {
     e.preventDefault();
+    console.log("ciao")
     if (!hasAcceptedFinalLock) {
       setFinalConsentError("Devi confermare di aver verificato i dati per poter procedere.");
       toast.error("Accetta il blocco definitivo dei dati prima di continuare.");
@@ -245,12 +255,12 @@ export default function RegisterPage() {
       toast.error("Devi verificare la tua email prima di procedere.");
       return;
     }
-    if (certificate?.status !== "uploaded") {
-      toast.error("Carica prima il certificato medico in PDF.");
-      return;
-    }
     try {
-      await submitRegistration();
+      const res = await submitRegistration();
+      if (!res.ok) {
+        toast.error("Errore conferma dati: " + (res.error || "Errore sconosciuto"));
+        return;
+      }
       setBackDisabled(true);
       toast.success(requiresPayment ? "Dati confermati. Completa il pagamento per concludere." : "Iscrizione completata.");
       if (!requiresPayment) {
@@ -258,7 +268,7 @@ export default function RegisterPage() {
         setPaymentMessage("Quota non dovuta, iscrizione completata.");
       }
     } catch (error) {
-      toast.error("Errore: " + error.message);
+      toast.error("Errore conferma dati.");
     }
   };
 
@@ -345,7 +355,7 @@ export default function RegisterPage() {
                   </span>
                 </div>
                 <p className={styles.certificateNote}>
-                  {backDisabled ? "Il certificato è stato confermato e non può più essere modificato." : "Il certificato medico si può caricare finché l'iscrizione non viene bloccata."}
+                  {backDisabled ? "Il certificato è stato confermato e non può più essere modificato." : "Il certificato medico deve ancora essere caricato."}
                 </p>
               </div>
               <div className={styles.summaryVisual}>
@@ -381,7 +391,7 @@ export default function RegisterPage() {
                 </div>
               </section>
             )}
-            {false && <div className={styles.certificateSection}>
+            {true && <div className={styles.certificateSection}>
               {!isCertificateLocked ? (
                 <MedicalCertificateUpload
                   certificate={certificate}
@@ -455,7 +465,7 @@ export default function RegisterPage() {
                   <button
                     className="button"
                     onClick={handleConfirmData}
-                    disabled={!emailVerified || !hasAcceptedFinalLock || confirmingSession || certificateStatus !== "uploaded"}
+                    // disabled={!emailVerified || !hasAcceptedFinalLock || confirmingSession || certificateStatus !== "uploaded"}
                   >
                     Conferma dati
                   </button>

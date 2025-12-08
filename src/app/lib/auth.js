@@ -45,7 +45,8 @@ export async function login({ email, password }, redirectOnSuccess = true) {
     if (!res.ok) {
       const err = await res.json();
       const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
+      // throw new Error(errorMessage || "Errore sconosciuto");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
     const data = await res.json();
     const userId = data.user.id;

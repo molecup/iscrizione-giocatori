@@ -28,12 +28,16 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const login_info = await loginApi({ email, password }, false);
-      if (login_info.ok && login_info.isManager)
+      if (!login_info.ok) {
+        toast.error("Login fallito: " + (login_info.error || "Credenziali non valide."));
+      }
+      else if (login_info.ok && login_info.isManager)
         router.push("/dashboard");
       else if (login_info.ok && login_info.isPlayer)
          router.push("/profile");
     } catch (err) {
-      toast.error("Login fallito: " + err.message);
+      toast.error("Login fallito.");
+      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }

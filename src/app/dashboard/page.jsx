@@ -35,10 +35,15 @@ export default function DashboardPage() {
     (async () => {
       try {
         const data = await getPlayers();
-        setTeamName(data.teamName);
-        setRegisterLink(data.registerLink);
-        setPlayers(data.players);
-        setHidePayment(data.registration_fee <= 0);
+        if (!data.ok) {
+          toast.error("Errore caricamento dati squadra: " + (data.error || "Errore sconosciuto"));
+        }
+        else{
+          setTeamName(data.teamName);
+          setRegisterLink(data.registerLink);
+          setPlayers(data.players);
+          setHidePayment(data.registration_fee <= 0);
+        }
       } catch (e) {
         toast.error("Errore caricamento dati squadra");
       } finally {
@@ -51,8 +56,13 @@ export default function DashboardPage() {
     setSaving(true);
     try {
       const res = await updatePlayers(players);
-      setPlayers(res.players);
-      toast.success("Modifiche salvate");
+      if (!res.ok) {
+        toast.error("Errore salvataggio: " + (res.error || "Errore sconosciuto"));
+      }
+      else {
+        setPlayers(res.players);
+        toast.success("Modifiche salvate");
+      }
     } catch (e) {
       toast.error("Errore salvataggio");
     } finally {
@@ -66,8 +76,13 @@ export default function DashboardPage() {
 
   const confirmRemoval = async () => {
     try {
-      await requestRemovalApi(removal.id);
-      toast.success("Richiesta inviata alla lega");
+      const res = await requestRemovalApi(removal.id);
+      if (!res.ok) {
+        toast.error("Errore invio richiesta: " + (res.error || "Errore sconosciuto"));
+      }
+      else {
+        toast.success("Richiesta inviata alla lega");
+      }
     } catch (e) {
       toast.error("Errore invio richiesta");
     } finally {
@@ -78,9 +93,14 @@ export default function DashboardPage() {
   const handleRegisterPlayerForManager = async (e) => {
     e.preventDefault();
     try {
-      await registerPlayerForManager();
-      toast.success("Giocatore registrato con successo");
-      router.refresh();
+      const res = await registerPlayerForManager();
+      if (!res.ok) {
+        toast.error("Errore registrazione giocatore: " + (res.error || "Errore sconosciuto"));
+      }
+      else {
+        toast.success("Giocatore registrato con successo");
+        router.refresh();
+      }
     } catch (e) {
       toast.error("Errore registrazione giocatore.: " + e.message);
     }

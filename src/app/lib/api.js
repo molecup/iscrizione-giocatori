@@ -5,6 +5,7 @@ import {verifySession, addPlayerIdToSession} from "@app/lib/sessions";
 export async function getTeamApi() {
   await delay(400);
   return {
+    ok: true,
     teamName: "ASD Milano Nord",
     registerLink: "http://localhost:3000/register/abc123",
     players: [
@@ -48,17 +49,18 @@ export async function getPlayers(){
     if (!res.ok) {
       const err = await res.json();
       const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
     const data =  await res.json();
-    return api2frontendPlayerList(data);
+    return {ok: true, ...api2frontendPlayerList(data)};
     
 }
 
 export async function updatePlayers(updatedPlayers) {
   const session = await verifySession();
   if (!session.list_manager_id) {
-        throw new Error("Permessi insufficienti");
+        // throw new Error("Permessi insufficienti");
+        return { ok: false, error: "Permessi insufficienti" };
     }
   const request = process.env.API_URL_BASE + "/registration/player-lists/" + session.list_manager_id + "/";
   const res = await fetch(request, {
@@ -79,7 +81,8 @@ export async function updatePlayers(updatedPlayers) {
     if (!res.ok) {
         const err = await res.json();
         const errorMessage = Object.values(err).flat().join(", ");
-        throw new Error(errorMessage || "Errore sconosciuto");
+        // throw new Error(errorMessage || "Errore sconosciuto");
+        return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
 
     const data = await res.json();
@@ -90,7 +93,7 @@ export async function updatePlayers(updatedPlayers) {
 export async function updateSinglePlayer(updatedPlayer, hasParentData) {
     const session = await verifySession();
     if (!session.playerId) {
-        throw new Error("Permessi insufficienti");
+        return { ok: false, error: "Permessi insufficienti" };
     }
     const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/";
     const res = await fetch(request, {
@@ -123,15 +126,16 @@ export async function updateSinglePlayer(updatedPlayer, hasParentData) {
       const err = await res.json();
       console.log(err);
       const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
-    return await res.json();
+    const data = await res.json();
+    return {ok: true, ...data};
 }
 
 export async function submitRegistration(){
     const session = await verifySession();
     if (!session.playerId) {
-        throw new Error("Permessi insufficienti");
+        return { ok: false, error: "Permessi insufficienti" };
     }
     const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/";
     const res = await fetch(request, {
@@ -147,15 +151,15 @@ export async function submitRegistration(){
     if (!res.ok) {
       const err = await res.json();
       const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
-    return await res.json();
+    return {ok: true, ...await res.json()};
 }
 
 export async function requestRemovalApi(playerId) {
     const session = await verifySession();
     if (!session.list_manager_id) {
-        throw new Error("Permessi insufficienti");
+        return { ok: false, error: "Permessi insufficienti" };
     }
     const request = process.env.API_URL_BASE + "/registration/deletion-requests/";
     const res = await fetch(request, {
@@ -173,7 +177,8 @@ export async function requestRemovalApi(playerId) {
         const err = await res.json();
         console.log(err)
         const errorMessage = Object.values(err).flat().join(", ");
-        throw new Error(errorMessage || "Errore sconosciuto");
+        // throw new Error(errorMessage || "Errore sconosciuto");
+        return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
     return { ok: true };
 }
@@ -193,10 +198,11 @@ export async function getRemovalRequests() {
     if (!res.ok) {
       const err = await res.json();
       const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
     const data =  await res.json();
     return data.requests.map(r => ({
+        ok: true,
         requestId: r.id,
         requestedAt: r.requested_at,
         status: r.status, // PENDING, APPROVED, REJECTED
@@ -235,14 +241,15 @@ export async function getUserData() {
     if (!res.ok) {
       const err = await res.json();
       const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
     const data =  await res.json();
     if (!["PEND", "EDIT", "SUB"].includes(data.registration_status)){
-        throw new Error("Stato di registrazione non valido");
+        return { ok: false, error: "Stato di registrazione non valido" };
     }
 
     return {
+        ok: true,
         formData : {
             nome : data.first_name || "",
             cognome : data.last_name || "",
@@ -274,7 +281,7 @@ export async function getUserData() {
 export async function registerPlayerForManager(){
     const session = await verifySession();
     if (!session.list_manager_id) {
-        throw new Error("Permessi insufficienti");
+        return { ok: false, error: "Permessi insufficienti" };
     }
     const request = process.env.API_URL_BASE + "/registration/player-registration-for-manager/";
     const res = await fetch(request, {
@@ -286,11 +293,12 @@ export async function registerPlayerForManager(){
     if (!res.ok) {
       const err = await res.json();
       const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
     console.log("Player registration for manager successfull");
     const data = await res.json();
     await addPlayerIdToSession(data.player.id);
+    return { ok: true, playerId: data.player.id  };
 }
 
 export async function sendVerificationEmail(email) {
