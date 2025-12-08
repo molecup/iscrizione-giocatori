@@ -381,7 +381,7 @@ export default function RegisterPage() {
                 </div>
               </section>
             )}
-            <div className={styles.certificateSection}>
+            {false && <div className={styles.certificateSection}>
               {!isCertificateLocked ? (
                 <MedicalCertificateUpload
                   certificate={certificate}
@@ -397,7 +397,7 @@ export default function RegisterPage() {
                   {certificate?.fileName && <p>File: {certificate.fileName}</p>}
                 </div>
               )}
-            </div>
+            </div>}
             {confirmError && <p className={styles.error}>{confirmError}</p>}
             {!emailVerified && (
               <div className={styles.alertBox}>
