@@ -11,7 +11,7 @@
   "dependencies": {
     "@stripe/stripe-js": "^8.4.0",
     "jose": "^6.1.2",
-    "next": "16.0.1",
+    "next": "16.0.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "stripe": "^19.3.1"
