@@ -5,7 +5,7 @@ import { useToast } from "@app/components/ToastProvider";
 
 const MAX_BYTES = Number(process.env.NEXT_PUBLIC_MED_CERT_MAX_BYTES || 5 * 1024 * 1024);
 const CARD_SUBTITLE = "Serve il PDF firmato dal medico per completare l'iscrizione.";
-const PRE_LOCK_HINT = "Carica il PDF firmato prima di confermare i dati.";
+const PRE_LOCK_HINT = "Carica il certificato in formato PDF.";
 const POST_UPLOAD_HINT = "Il certificato resta modificabile finché non lo confermi manualmente.";
 const LOCKED_HINT = "Certificato confermato: per modifiche contatta la segreteria.";
 const ALLOW_FAKE_UPLOAD = process.env.NEXT_PUBLIC_ALLOW_FAKE_MED_CERT === "true";
