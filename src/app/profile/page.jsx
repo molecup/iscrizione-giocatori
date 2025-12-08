@@ -391,7 +391,7 @@ export default function RegisterPage() {
                 </div>
               </section>
             )}
-            {true && <div className={styles.certificateSection}>
+            {false && <div className={styles.certificateSection}>
               {!isCertificateLocked ? (
                 <MedicalCertificateUpload
                   certificate={certificate}
