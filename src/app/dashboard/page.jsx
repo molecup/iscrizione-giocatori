@@ -4,7 +4,7 @@ import styles from "./page.module.css";
 import PlayerTable from "@app/components/PlayerTable";
 import Modal from "@app/components/Modal";
 // import { getTeamApi, updatePlayersApi, requestRemovalApi } from "../lib/mockApi";
-import {getPlayers, updatePlayers, requestRemovalApi, registerPlayerForManager} from "@app/lib/api";
+import {getPlayers, updatePlayers, requestRemovalApi, registerPlayerForManager, submitPlayerList} from "@app/lib/api";
 import { useToast } from "@app/components/ToastProvider";
 import { useRouter } from "next/navigation";
 import { getUserPermissions } from "@app/lib/auth";
@@ -20,6 +20,9 @@ export default function DashboardPage() {
   const [saving, setSaving] = useState(false);
   const [removal, setRemoval] = useState(null);
   const [hidePayment, setHidePayment] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -43,6 +46,7 @@ export default function DashboardPage() {
           setRegisterLink(data.registerLink);
           setPlayers(data.players);
           setHidePayment(data.registration_fee <= 0);
+          setSubmitted(data.confermata);
         }
       } catch (e) {
         toast.error("Errore caricamento dati squadra");
@@ -90,6 +94,43 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSubmitList = async (e) => {
+    e.preventDefault();
+    const playerNum = players.filter((p) => p.confermato).length
+    if (playerNum < 22) {
+      toast.error("Devi avere almeno 22 iscrizioni complete per inviare la conferma definitiva.");
+      setShowSubmitConfirm(false);
+      return;
+    }
+    if (playerNum > 25) {
+      toast.error("Non puoi avere più di 25 iscrizioni complete per inviare la conferma definitiva.");
+      setShowSubmitConfirm(false);
+      return;
+    }
+    if (players.some((p) => !p.confermato)) {
+      toast.error("Tutti i giocatori devono avere l'iscrizione completa per inviare la conferma definitiva.");
+      setShowSubmitConfirm(false);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await submitPlayerList();
+      if (!res.ok) {
+        toast.error("Errore invio lista: " + (res.error || "Errore sconosciuto"));
+      }
+      else {
+        toast.success("Lista inviata con successo");
+        setSubmitted(true);
+      }
+    } catch (e) {
+      toast.error("Errore invio lista");
+      console.log(e);
+    } finally {
+      setSubmitting(false);
+      setShowSubmitConfirm(false);
+    }
+  };
+
   const handleRegisterPlayerForManager = async (e) => {
     e.preventDefault();
     try {
@@ -108,6 +149,8 @@ export default function DashboardPage() {
 
   if (loading) return <p>Caricamento...</p>;
 
+  const completedCount = players.filter((p) => p.confermato).length;
+
   return (
     <div className={styles.page}>
       <div className={styles.header + " card"}>
@@ -115,13 +158,42 @@ export default function DashboardPage() {
           <h2>{teamName}</h2>
           <p className={styles.muted}>Gestione rosa giocatori</p>
         </div>
-        <div className={styles.actions}>
+        {!submitted && <div className={styles.actions}>
           <button className="button secondary" onClick={()=> setShowInvite(true)}>➕ Aggiungi giocatore</button>
           <button className="button" onClick={saveChanges} disabled={saving}>{saving ? "Salvataggio..." : "Salva modifiche"}</button>
-        </div>
+        </div>}
       </div>
 
-      <PlayerTable players={players} setPlayers={setPlayers} onRequestRemoval={requestRemoval} hidePayment={hidePayment} />
+      {!!submitted &&<div className={styles.header + " card"}>
+          <h3>Lista giocatori inviata alla lega</h3>
+      </div>}
+
+      {!submitted && <div className={styles.header + " card"}>
+        <p className={styles.muted} >Usa la tabella sottostante per gestire i giocatori della tua squadra. Puoi modificare il numero, la taglia della maglia e la posizione di ciascun giocatore. Ricorda di salvare le modifiche dopo aver effettuato delle modifiche.</p>
+      </div>}
+
+      {!submitted && <div className={styles.header + " card"}>
+        <div>
+          <p>Iscrizioni complete</p>
+          <h3>{completedCount} / {players.length}</h3>
+        </div>
+      </div>}
+
+      <PlayerTable players={players} setPlayers={setPlayers} onRequestRemoval={requestRemoval} hidePayment={hidePayment} locked={submitted} />
+
+      {!submitted && <div className={styles.header + " card"}>
+        <div>
+          <h3>Conferma Iscrizione squadra</h3>
+          <p className={styles.muted}>Dopo aver confermata tutti i dati dei giocatori è necessario inviare la conferma definitiva alla lega.</p> 
+          
+        </div>
+        <div className={styles.actions}>
+            <button className="button" onClick={()=> setShowSubmitConfirm(true)} disabled={submitted || submitting}>{"Invia conferma definitiva"}</button>
+          </div> 
+      </div>}
+
+      
+      
 
       <Modal open={showInvite} onClose={()=> setShowInvite(false)} title="Link invito registrazione">
         <div className={styles.inviteSection}>
@@ -157,6 +229,11 @@ export default function DashboardPage() {
              actions={<button className="button" onClick={confirmRemoval}>Invia richiesta</button>}>
         <p>Sei sicuro di voler richiedere la rimozione di {removal?.nome} {removal?.cognome}?</p>
         <p className={styles.muted}>La lega valuterà la richiesta e ti contatterà.</p>
+      </Modal>
+
+      <Modal open={!!showSubmitConfirm} onClose={()=> setShowSubmitConfirm(false)} title="Invia conferma definitiva"
+             actions={<button className="button" onClick={handleSubmitList}>{submitting ? "Invio in corso..." : "Invia conferma"}</button>}>
+        <p>Sei sicuro di voler inviare la conferma definitiva? Dopo aver inviato la conferma le iscrizioni non potranno più essere modificate.</p>
       </Modal>
     </div>
   );

@@ -6,7 +6,7 @@ import styles from "./PlayerTable.module.css";
 const TAGLIE = ["S", "M", "L", "XL"];
 const POSIZIONI = ["POR", "DIF", "CEN", "ATT"];
 
-export default function PlayerTable({ players, setPlayers, onRequestRemoval, hidePayment=false }) {
+export default function PlayerTable({ players, setPlayers, onRequestRemoval, hidePayment=false, locked=false }) {
   const [sortKey, setSortKey] = useState("cognome");
   const [sortAsc, setSortAsc] = useState(true);
 
@@ -61,19 +61,19 @@ export default function PlayerTable({ players, setPlayers, onRequestRemoval, hid
                 <span>{p.nascita}</span>
               </td>
               <td>
-                <EditableCell value={p.numero} onChange={(v)=>updateField(p.id,'numero',Number(v))} type="number" min={1} max={99} />
+                <EditableCell value={p.numero} onChange={(v)=>updateField(p.id,'numero',Number(v))} type="number" min={1} max={99} disabled={locked} />
               </td>
               <td>
-                <EditableCell value={p.taglia} onChange={(v)=>updateField(p.id,'taglia',v)} type="select" options={TAGLIE} placeholder="Taglia" />
+                <EditableCell value={p.taglia} onChange={(v)=>updateField(p.id,'taglia',v)} type="select" options={TAGLIE} placeholder="Taglia" disabled={locked} />
               </td>
               <td>
-                <EditableCell value={p.posizione} onChange={(v)=>updateField(p.id,'posizione',v)} type="select" options={POSIZIONI} placeholder="Posizione" />
+                <EditableCell value={p.posizione} onChange={(v)=>updateField(p.id,'posizione',v)} type="select" options={POSIZIONI} placeholder="Posizione" disabled={locked} />
               </td>
               {!hidePayment && <td style={{textAlign:'center'}}>
                 <input type="checkbox" checked={!!p.pagato} disabled aria-label="Quota pagata" />
               </td>}
               <td>
-                <button className="button secondary" onClick={()=>onRequestRemoval?.(p)}>Richiedi rimozione</button>
+                {!locked && <button className="button secondary" onClick={()=>onRequestRemoval?.(p)} disabled={locked}>Richiedi rimozione</button>}
               </td>
             </tr>
           ))}

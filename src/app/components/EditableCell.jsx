@@ -2,7 +2,7 @@
 import { useState } from "react";
 import styles from "./EditableCell.module.css";
 
-export default function EditableCell({ value, onChange, type = "text", options = [], placeholder = "", required = false, min, max }) {
+export default function EditableCell({ value, onChange, type = "text", options = [], placeholder = "", required = false, min, max, disabled = false }) {
   const [local, setLocal] = useState(value ?? "");
 
   const handleBlur = () => {
@@ -21,6 +21,8 @@ export default function EditableCell({ value, onChange, type = "text", options =
               onChange={(e)=>{ setLocal(e.target.value); onChange?.(e.target.value);} }
               onBlur={handleBlur}
               required={required}
+              disabled={disabled}
+              
       >
         <option value="" disabled>{placeholder || "Seleziona"}</option>
         {options.map(opt => (
@@ -34,7 +36,9 @@ export default function EditableCell({ value, onChange, type = "text", options =
     return (
       <input type="checkbox" className={styles.checkbox}
              checked={!!local}
-             onChange={(e)=>{ setLocal(e.target.checked); onChange?.(e.target.checked);} } />
+             onChange={(e)=>{ setLocal(e.target.checked); onChange?.(e.target.checked);} } 
+             disabled={disabled}
+             />
     );
   }
 
@@ -49,6 +53,7 @@ export default function EditableCell({ value, onChange, type = "text", options =
       required={required}
       min={min}
       max={max}
+      disabled={disabled}
     />
   );
 }

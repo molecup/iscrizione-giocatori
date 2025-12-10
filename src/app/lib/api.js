@@ -20,6 +20,7 @@ function api2frontendPlayerList(data) {
         teamName : data.name,
         registerLink : process.env.HOSTNAME + "/register/" + data.registration_token,
         registration_fee : data.registration_fee,
+        confermata : data.submitted_at != null,
         players : data.players.map(p => ({
             id: p.id,
             nome: p.first_name || "",
@@ -319,6 +320,26 @@ export async function sendVerificationEmail(email) {
     return await res.json();
 }
 
+export async function submitPlayerList(){
+    const session = await verifySession();
+    if (!session.list_manager_id) {
+        return { ok: false, error: "Permessi insufficienti" };
+    }
+    const request = process.env.API_URL_BASE + "/registration/submit-player-list/" + session.list_manager_id + "/";
+    const res = await fetch(request, {
+        method: "POST",
+        headers: {
+            'Authorization': 'Bearer ' + session.token,
+        },
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
+    }
+    return { ok: true };
+}
+
 // Simulate account registration with token, email and password
 
 
@@ -407,3 +428,5 @@ export async function confirmMedicalCertificate() {
     }
     return await res.json();
 }
+
+
