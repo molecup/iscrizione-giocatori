@@ -24,7 +24,7 @@ export default function LoginPage() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    // if (!validate()) return;
     setLoading(true);
     try {
       const login_info = await loginApi({ email, password }, false);
@@ -50,7 +50,7 @@ export default function LoginPage() {
         {/* <p className={styles.subtitle}>Referente squadra (capitano/allenatore)</p> */}
         <label className={styles.field}>
           <span className="label">Email</span>
-          <input className="input" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required />
+          <input className="input" value={email} onChange={(e)=>setEmail(e.target.value)} required />
           {errors.email && <span className={styles.error}>{errors.email}</span>}
         </label>
         <label className={styles.field}>
