@@ -30,6 +30,7 @@ export default function PlayerTable({ players, setPlayers, onRequestRemoval, hid
       <table className="table">
         <thead>
           <tr>
+            <th>Iscrizione completa</th>
             <th onClick={()=>headerClick('nome')} className={styles.sortable}>Nome</th>
             <th onClick={()=>headerClick('cognome')} className={styles.sortable}>Cognome</th>
             <th>Email</th>
@@ -44,6 +45,9 @@ export default function PlayerTable({ players, setPlayers, onRequestRemoval, hid
         <tbody>
           {sorted.map(p => (
             <tr key={p.id}>
+              <td>
+                <input type="checkbox" checked={!!p.confermato} disabled aria-label="Iscrizione completa" />
+              </td>
               <td>
                 <span>{p.nome}</span>
               </td>

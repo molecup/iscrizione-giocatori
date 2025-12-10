@@ -30,6 +30,7 @@ function api2frontendPlayerList(data) {
             taglia: p.shirt_size || "",
             posizione: p.position || "",
             pagato:  false, // Placeholder, da implementare TODO
+            confermato: p.registration_status === "SUB",
         }))
     };
 }
