@@ -169,7 +169,7 @@ export default function DashboardPage() {
       </div>}
 
       {!submitted && <div className={styles.header + " card"}>
-        <p className={styles.muted} >Usa la tabella sottostante per gestire i giocatori della tua squadra. Puoi modificare il numero, la taglia della maglia e la posizione di ciascun giocatore. Ricorda di salvare le modifiche dopo aver effettuato delle modifiche.</p>
+        <p className={styles.muted} >Usa la tabella sottostante per gestire i giocatori della tua squadra. Puoi modificare il numero, la taglia della maglia e la posizione di ciascun giocatore. Ricorda di salvare dopo aver effettuato delle modifiche.</p>
       </div>}
 
       {!submitted && <div className={styles.header + " card"}>
