@@ -4,9 +4,9 @@ import { redirect } from 'next/navigation';
 
 
 export async function registerAccountApi({ token, email, password }) {
-  if (!token) throw new Error("Token mancante");
-  if (!email) throw new Error("Email mancante");
-  if (!password || String(password).length < 6) throw new Error("Password troppo corta");
+  if (!token) return { ok: false, error: "Token mancante" };
+  if (!email) return { ok: false, error: "Email mancante" };
+  if (!password || String(password).length < 6) return { ok: false, error: "Password mancante o troppo corta" };
   const request = process.env.API_URL_BASE + "/registration/player-registration/";
   const res = await fetch(request, {
         method: "POST",
@@ -22,9 +22,11 @@ export async function registerAccountApi({ token, email, password }) {
   if (!res.ok) {
     const err = await res.json();
     const errorMessage = Object.values(err).flat().join(", ");
-    throw new Error(errorMessage || "Errore sconosciuto");
+    // throw new Error(errorMessage || "Errore sconosciuto");
+    return { ok: false, error: errorMessage || "Errore sconosciuto" };
   }
   console.log("Registration successful");
+  return { ok: true };
 }
 
 export async function getUserPermissions() {
@@ -81,8 +83,8 @@ export async function logout() {
 }
 
 export async function resetPassword(token, mail, password) {
-    if (!token) throw new Error("Token mancante");
-    if (!password ) throw new Error("Password mancante");
+    if (!token) return {ok: false, error: "Token mancante"};
+    if (!password ) return {ok: false, error: "Password mancante"};
 
     const request = process.env.API_URL_BASE + "/registration/reset-password-requests/";
     const res = await fetch(request, {
@@ -100,9 +102,11 @@ export async function resetPassword(token, mail, password) {
       console.log(res)
       const err = await res.json();
       const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
+      // throw new Error(errorMessage || "Errore sconosciuto");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
     console.log("Password reset successful");
+    return { ok: true };
 }
 
 export async function requestPasswordReset({ email }) {
@@ -127,7 +131,8 @@ export async function requestPasswordReset({ email }) {
 }
 
 export async function verifyEmail(token, mail) {
-    if (!token) throw new Error("Token mancante");
+    if (!token) return {ok: false, error: "Token mancante"};
+    if (!mail ) return {ok: false, error: "Email mancante"};
     const request = process.env.API_URL_BASE + "/registration/confirm-user-mail-verification/";
     const res = await fetch(request, {
         method: "POST",
@@ -143,7 +148,9 @@ export async function verifyEmail(token, mail) {
       console.log(res)
       const err = await res.json();
       const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
+      // throw new Error(errorMessage || "Errore sconosciuto");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
     }
     console.log("Email verification successful");
+    return { ok: true };
 }

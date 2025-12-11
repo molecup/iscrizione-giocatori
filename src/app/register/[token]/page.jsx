@@ -49,7 +49,12 @@ export default function RegisterPage() {
     if (!validateAccount()) return;
     setSubmittingAccount(true);
     try {
-      await registerAccountApi({ token, email: accountEmail, password: accountPassword });
+      const res = await registerAccountApi({ token, email: accountEmail, password: accountPassword });
+      if (!res.ok) {
+        toast.error("Registrazione fallita: " + (res.error || "Errore sconosciuto"));
+        setSubmittingAccount(false);
+        return;
+      }
       toast.success("Account creato con successo!");
       const login_status = await login({ email: accountEmail, password: accountPassword }, false);
       console.log("Login status after registration:", login_status);

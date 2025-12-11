@@ -49,7 +49,12 @@ export default function RegisterPage() {
     if (!validateAccount()) return;
     setSubmittingReset(true);
     try {
-      await resetPasswordApi(token, mail, accountPassword);
+      const res = await resetPasswordApi(token, mail, accountPassword);
+      if (!res.ok) {
+        toast.error("Reimpostazione password fallita: " + (res.error || "Errore sconosciuto"));
+        setSubmittingReset(false);
+        return;
+      }
       toast.success("Password reimpostata con successo!");
       const login_info = await login({ email: mail, password: accountPassword }, false);
       if (login_info.ok && login_info.isPlayer)

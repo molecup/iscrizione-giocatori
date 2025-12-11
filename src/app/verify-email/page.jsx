@@ -20,7 +20,12 @@ export default function RegisterPage() {
   useEffect(() => {
     (async () => {
       try {
-        await verifyEmail(token, mail);
+        const res = await verifyEmail(token, mail);
+        if (!res.ok) {
+          toast({ type: "error", message: res.error || "Errore di verifica" });
+          setStep("error");
+          return;
+        }
         setStep("done");
       } catch (err) {
         toast({ type: "error", message: err.message || "Errore di verifica" });
