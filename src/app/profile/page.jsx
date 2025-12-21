@@ -51,7 +51,7 @@ export default function RegisterPage() {
   const certificateStatus = certificate?.status || "missing";
   const certificateLockedManually = certificate?.locked === true;
   const canLockCertificate = certificateStatus === "uploaded" && !certificateLockedManually;
-  const isCertificateLocked = backDisabled || certificateLockedManually;
+  const isCertificateLocked = certificateLockedManually;
   const certificateBadge = certificateStatus === "uploaded"
     ? { className: styles.badgeCertReady, label: "Certificato caricato" }
     : certificateStatus === "loading"
@@ -355,7 +355,7 @@ export default function RegisterPage() {
                   </span>
                 </div>
                 <p className={styles.certificateNote}>
-                  {backDisabled ? "Il certificato è stato confermato e non può più essere modificato." : "Il certificato medico deve ancora essere caricato."}
+                  {isCertificateLocked ? "Il certificato medico è stato confermato e non può più essere modificato." : "Il certificato medico deve ancora essere caricato."}
                 </p>
               </div>
               <div className={styles.summaryVisual}>
@@ -391,7 +391,7 @@ export default function RegisterPage() {
                 </div>
               </section>
             )}
-            {false && <div className={styles.certificateSection}>
+            {true && <div className={styles.certificateSection}>
               {!isCertificateLocked ? (
                 <MedicalCertificateUpload
                   certificate={certificate}
@@ -402,9 +402,14 @@ export default function RegisterPage() {
                 />
               ) : (
                 <div className={styles.certificateSummary}>
-                  <h4>Certificato medico confermato</h4>
+                  <h4>Certificato medico caricato</h4>
                   <p>Caricato il {certificate?.uploadedAt ? new Date(certificate.uploadedAt).toLocaleDateString("it-IT") : "-"}.</p>
                   {certificate?.fileName && <p>File: {certificate.fileName}</p>}
+                  {certificate?.downloadUrl && 
+                    <div className={styles.resendLink}>
+                       <a href={certificate.downloadUrl} target="_blank" rel="noreferrer" className="button secondary">Scarica certificato</a>
+                    </div>
+                  }
                 </div>
               )}
             </div>}

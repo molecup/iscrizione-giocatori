@@ -1,6 +1,14 @@
 "use server"
 import {verifySession, addPlayerIdToSession} from "@app/lib/sessions";
+import path from "path";
+import { promises as fs, stat } from "fs";
+
+
 // import { register } from "next/dist/next-devtools/userspace/pages/pages-dev-overlay-setup";
+import {
+  FILES_DIR,
+  getRecord,
+} from "@app/api/medical-certificate/utils";
 
 export async function getTeamApi() {
   await delay(400);
@@ -33,6 +41,19 @@ function api2frontendPlayerList(data) {
             pagato:  false, // Placeholder, da implementare TODO
             confermato: p.registration_status === "SUB",
         }))
+    };
+}
+
+function api2frontendMedicalCertificate(data) {
+    if (!data){
+        return { status: "missing", locked: false};
+    }
+    return {
+        status: "uploaded",
+        locked: true,
+        certificateId: data.id,
+        uploadedAt: data.uploaded_at,
+        downloadUrl: data.file,
     };
 }
 
@@ -275,7 +296,7 @@ export async function getUserData() {
             can_edit: data.registration_status !== "SUB" && data.player_list.submitted_at == null,
             is_complete: data.registration_status === "SUB" || data.registration_status === "EDIT",
             email_verified: data.email_verified,
-            medical_certificate: data.medical_certificate || null,
+            medical_certificate: api2frontendMedicalCertificate(data.medical_certificate),
         }
     };
 }
@@ -347,86 +368,110 @@ function delay(ms) {
   return new Promise(res => setTimeout(res, ms));
 }
 
-export async function getMedicalCertificate() {
-    const session = await verifySession();
-    if (!session.playerId) {
-        throw new Error("Permessi insufficienti");
-    }
-    const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/";
-    const res = await fetch(request, {
-        method: "GET",
-        headers: {
-            'Authorization': 'Bearer ' + session.token,
-        },
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
-    }
-    return await res.json();
-}
+// export async function getMedicalCertificate() {
+//     const session = await verifySession();
+//     if (!session.playerId) {
+//         throw new Error("Permessi insufficienti");
+//     }
+//     const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/";
+//     const res = await fetch(request, {
+//         method: "GET",
+//         headers: {
+//             'Authorization': 'Bearer ' + session.token,
+//         },
+//     });
+//     if (!res.ok) {
+//       const err = await res.json();
+//       const errorMessage = Object.values(err).flat().join(", ");
+//       throw new Error(errorMessage || "Errore sconosciuto");
+//     }
+//     return await res.json();
+// }
 
-export async function uploadMedicalCertificate(formData) {
-    const session = await verifySession();
-    if (!session.playerId) {
-        throw new Error("Permessi insufficienti");
-    }
-    const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/";
-    const res = await fetch(request, {
-        method: "POST",
-        headers: {
-            'Authorization': 'Bearer ' + session.token,
-        },
-        body: formData,
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
-    }
-    return await res.json();
-}
+// export async function uploadMedicalCertificate(formData) {
+//     const session = await verifySession();
+//     if (!session.playerId) {
+//         throw new Error("Permessi insufficienti");
+//     }
+//     const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/";
+//     const res = await fetch(request, {
+//         method: "POST",
+//         headers: {
+//             'Authorization': 'Bearer ' + session.token,
+//         },
+//         body: formData,
+//     });
+//     if (!res.ok) {
+//       const err = await res.json();
+//       const errorMessage = Object.values(err).flat().join(", ");
+//       throw new Error(errorMessage || "Errore sconosciuto");
+//     }
+//     return await res.json();
+// }
 
-export async function deleteMedicalCertificate() {
-    const session = await verifySession();
-    if (!session.playerId) {
-        throw new Error("Permessi insufficienti");
-    }
-    const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/";
-    const res = await fetch(request, {
-        method: "DELETE",
-        headers: {
-            'Authorization': 'Bearer ' + session.token,
-        },
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      const errorMessage = Object.values(err).flat().join(", ");
-      throw new Error(errorMessage || "Errore sconosciuto");
-    }
-    return await res.json();
-}
+// export async function deleteMedicalCertificate() {
+//     const session = await verifySession();
+//     if (!session.playerId) {
+//         throw new Error("Permessi insufficienti");
+//     }
+//     const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/";
+//     const res = await fetch(request, {
+//         method: "DELETE",
+//         headers: {
+//             'Authorization': 'Bearer ' + session.token,
+//         },
+//     });
+//     if (!res.ok) {
+//       const err = await res.json();
+//       const errorMessage = Object.values(err).flat().join(", ");
+//       throw new Error(errorMessage || "Errore sconosciuto");
+//     }
+//     return await res.json();
+// }
 
 export async function confirmMedicalCertificate() {
     const session = await verifySession();
     if (!session.playerId) {
         throw new Error("Permessi insufficienti");
     }
-    const request = process.env.API_URL_BASE + "/registration/players/" + session.playerId + "/medical-certificate/confirm/";
+
+    const { record, meta } = await getRecord(session.playerId);
+      if (!record) {
+        throw new Error("Nessun certificato da confermare");
+      }
+      if (!record.storedFile) {
+        throw new Error("File certificato non trovato");
+      }
+      const filePath = path.join(FILES_DIR, record.storedFile);
+      try {
+        var file = await fs.readFile(filePath);
+      } catch (error) {
+        throw new Error("File certificato non trovato");
+      }   
+
+    const formData = new FormData();
+    formData.append("file", new Blob([file], { type: 'application/pdf' }), record.storedFile);
+    formData.append("player", session.playerId)
+    formData.append("expires_at", "2026-06-20")
+
+    const request = process.env.API_URL_BASE + "/registration/medical-certificates/";
     const res = await fetch(request, {
         method: "POST",
         headers: {
             'Authorization': 'Bearer ' + session.token,
-            'Content-Type': 'application/json'
         },
+        body: formData,
+
+
     });
+    console.log(res);
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         const errorMessage = Object.values(err).flat().join(", ");
         throw new Error(errorMessage || "Errore sconosciuto");
     }
-    return await res.json();
+    const resData  = await res.json();
+    return api2frontendMedicalCertificate(resData);
 }
 
 
