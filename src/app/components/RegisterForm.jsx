@@ -99,12 +99,36 @@ export default function RegisterForm({ onSubmit, emailReadOnly = false, form, se
     return Object.keys(e).length === 0;
   };
 
+  function toTitleCase(s, locale = 'it-IT') {
+  return s
+    .toLowerCase()
+    .replace(/\b\p{L}/gu, ch => ch.toLocaleUpperCase(locale));
+  }
+
+  const sanitize = () => {
+    form.luogoNascita = toTitleCase(form.luogoNascita.trim());
+    if (isMinor) {
+      form.genitoreLuogoNascita = toTitleCase(form.genitoreLuogoNascita.trim());
+    }
+    form.nome = toTitleCase(form.nome.trim());
+    form.cognome = toTitleCase(form.cognome.trim());
+    if (isMinor) {
+      form.genitoreNome = toTitleCase(form.genitoreNome.trim());
+      form.genitoreCognome = toTitleCase(form.genitoreCognome.trim());
+    }
+    form.cf = form.cf.trim().toUpperCase();
+    if (isMinor) {
+      form.genitoreCf = form.genitoreCf.trim().toUpperCase();
+    }
+  }
+  
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) {
       toast.error("Per favore correggi gli errori del form.");
       return;
     }
+    sanitize();
     onSubmit?.(form, isMinor);
   };
 
