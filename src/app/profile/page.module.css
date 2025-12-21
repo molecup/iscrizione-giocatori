@@ -58,10 +58,41 @@
 .paymentCalloutAmount span { display:block; font-size:13px; color:inherit; opacity:0.7; }
 .paymentCalloutAmount strong { font-size:28px; line-height:1.2; color:inherit; }
 @media (max-width:640px){
-  .card { padding: 24px 16px; }
-  .summaryHero { flex-direction: column; align-items: flex-start; padding: 20px; }
-  .actions { flex-direction: column; }
-  .finalLock { flex-direction: column; }
-  .paymentCallout { flex-direction:column; align-items:flex-start; }
-  .paymentCalloutAmount { width:100%; text-align:left; }
+  .wrapper {
+    padding: 6px 6px;
+  }
+
+  .card {
+    padding: 6px 6px;
+  }
+
+  .summaryHero {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .summaryVisual {
+    padding: 12px;
+  }
+
+  .sectionCard {
+    padding: 16px;
+  }
+
+  .alertBox {
+    padding: 14px 14px;
+  }
+
+  .finalLock {
+    padding: 16px;
+  }
+
+  .paymentCallout {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .paymentCalloutAmount strong {
+    font-size: 24px;
+  }
 }

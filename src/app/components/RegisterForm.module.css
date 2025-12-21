@@ -12,5 +12,14 @@
 .actions { display: flex; justify-content: flex-end; gap: 8px; }
 
 @media (max-width: 640px) {
+  .form { padding: 12px; }
   .grid { grid-template-columns: 1fr; }
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .actions :global(.button) {
+    width: 100%;
+    justify-content: center;
+  }
 }
