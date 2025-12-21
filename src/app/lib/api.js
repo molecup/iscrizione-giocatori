@@ -443,7 +443,6 @@ export async function confirmMedicalCertificate(data) {
         },
         body: JSON.stringify({ submit: true, expires_at: data.expiresAt  }),
     });
-    console.log(res);
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         const errorMessage = Object.values(err).flat().join(", ");
