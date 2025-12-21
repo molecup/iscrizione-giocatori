@@ -7,6 +7,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
+  position: relative;
 }
 .brand {
   display: inline-flex;
@@ -27,13 +28,85 @@
 }
 
 .nav {
-  display: inline-flex;
-  gap: 12px;
-  align-items: center;
+  position: fixed;
+  top: 67px;
+  right: 0;
+  left: 0;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 24px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  z-index: 100;
+  height: calc(100vh - 67px);
+  overflow-y: auto;
 }
+.navOpen {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+}
+.nav .button {
+  width: 100%;
+  justify-content: center;
+}
+
+.menuToggle {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+}
+.menuToggle span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: var(--foreground);
+  border-radius: 999px;
+}
+
 .link {
   color: var(--foreground);
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 16px 10px;
+  border-radius: 12px;
+  text-align: center;
 }
 .link:hover { background: var(--hover); }
+
+:global(.noScroll),
+:global(.noScroll *),
+:global(.noScroll body) {
+  overflow: hidden !important;
+}
+
+@media (min-width: 768px) {
+  .menuToggle { display: none; }
+  .nav {
+    position: static;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    height: auto;
+    overflow: visible;
+    z-index: auto;
+  }
+  .link {
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-align: left;
+  }
+}

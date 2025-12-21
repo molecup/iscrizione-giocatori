@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 export default function Header({ user_permissions }) {
     const [dark, setDark] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const light = !dark;
     const router = useRouter();
 
@@ -25,6 +26,20 @@ export default function Header({ user_permissions }) {
         }
     }, [dark]);
 
+    useEffect(() => {
+        const media = typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)") : null;
+        const lock = menuOpen && media?.matches;
+        if (typeof document !== "undefined") {
+            document.getElementById("container").style.display = lock ? "none" : "block";
+            console.log(document.getElementById("container"));
+        }
+        return () => {
+            if (typeof document !== "undefined") {
+                document.getElementById("container").display = "block";
+            }
+        };
+    }, [menuOpen]);
+
     const logoStyle = {
         width: 32,
         height: "auto",
@@ -38,6 +53,8 @@ export default function Header({ user_permissions }) {
         router.push("/login");
     }
 
+    const handleNavClick = () => setMenuOpen(false);
+
     return (
         <header className={styles.header}>
             <div className={styles.inner + " container"}>
@@ -45,12 +62,23 @@ export default function Header({ user_permissions }) {
                     <img src="/logoLCSw.png" alt="Logo" style={logoStyle} />
                     <span>LCS</span>
                 </Link>
-                <nav className={styles.nav}>
-                    {!user_permissions?.isAuth && <Link href="/login" className={styles.link}>Login</Link>}
-                    {user_permissions?.isPlayer && <Link href="/profile" className={styles.link}>Profile</Link>}
-                    {user_permissions?.isManager && <Link href="/dashboard" className={styles.link}>Dashboard</Link>}
-                    <Link href="/privacy" className={styles.link}>Privacy</Link>
-                    {user_permissions?.isAuth && <Link href="/login" className={styles.link} onClick={handle_logout}>Log Out</Link>}
+                <button
+                    className={styles.menuToggle}
+                    aria-expanded={menuOpen}
+                    aria-controls="primary-nav"
+                    aria-label="Apri il menu"
+                    onClick={() => setMenuOpen(v => !v)}
+                >
+                    <span />
+                    <span />
+                    <span />
+                </button>
+                <nav id="primary-nav" className={styles.nav + (menuOpen ? " " + styles.navOpen : "")}>
+                    {!user_permissions?.isAuth && <Link href="/login" className={styles.link} onClick={handleNavClick}>Login</Link>}
+                    {user_permissions?.isPlayer && <Link href="/profile" className={styles.link} onClick={handleNavClick}>Profile</Link>}
+                    {user_permissions?.isManager && <Link href="/dashboard" className={styles.link} onClick={handleNavClick}>Dashboard</Link>}
+                    <Link href="/privacy" className={styles.link} onClick={handleNavClick}>Privacy</Link>
+                    {user_permissions?.isAuth && <Link href="/login" className={styles.link} onClick={(e) => { handle_logout(e); handleNavClick(); }}>Log Out</Link>}
 
                     <button className="button secondary" onClick={() => setDark(v => !v)} aria-pressed={dark}>
                         {dark ? "Light" : "Dark"} mode

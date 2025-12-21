@@ -1,5 +1,5 @@
-.page { display: flex; flex-direction: column; gap: 16px; }
-.header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; }
+.page { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; }
 .muted { color: var(--muted); }
 .actions { display: flex; gap: 8px; }
 .inviteSection { display: flex; flex-direction: column; gap: 8px; }
@@ -8,6 +8,23 @@
 .inviteCopyButton { flex-shrink: 0; white-space: nowrap; }
 .inviteSelfBlock { display: flex; flex-direction: column; gap: 12px; padding-top: 8px; border-top: 1px solid var(--border); margin-top: 16px; }
 @media (max-width: 600px) {
+  .page {
+    padding: 12px;
+    gap: 12px;
+  }
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+  }
+  .actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .actions :global(.button) {
+    width: 100%;
+    justify-content: center;
+  }
   .inviteBox { flex-direction: column; align-items: stretch; }
   .inviteCopyButton { width: 100%; }
   .inviteSelfBlock button { width: 100%; }

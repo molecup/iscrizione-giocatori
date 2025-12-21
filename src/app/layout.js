@@ -26,7 +26,7 @@ export default async function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ToastProvider>
           <Header user_permissions={user_permissions} />
-          <main className="container">
+          <main id={"container"} className="container">
             {children}
           </main>
         </ToastProvider>

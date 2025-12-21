@@ -1,6 +1,15 @@
 .wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
+
+/* Ensure table stays usable on small screens by enabling horizontal scroll instead of squashing columns */
+@media (max-width: 600px) {
+  .wrapper :global(.table) {
+    min-width: 920px;
+  }
+}
+
 .sortable {
   cursor: pointer;
 }
