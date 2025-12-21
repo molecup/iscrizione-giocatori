@@ -175,7 +175,7 @@ export default function DashboardPage() {
 
       {!submitted && <div className={styles.header + " card"}>
         <div>
-          <p>Iscrizioni complete</p>
+          <p>Iscrizioni iniziate / confermate</p>
           <h3>{completedCount} / {players.length}</h3>
         </div>
       </div>}
