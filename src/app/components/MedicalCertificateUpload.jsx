@@ -2,6 +2,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import styles from "./MedicalCertificateUpload.module.css";
 import { useToast } from "@app/components/ToastProvider";
+import { uploadMedicalCertificate, deleteMedicalCertificate } from "../lib/api";
 
 const MAX_BYTES = Number(process.env.NEXT_PUBLIC_MED_CERT_MAX_BYTES || 5 * 1024 * 1024);
 const CARD_SUBTITLE = "Serve il PDF firmato dal medico per completare l'iscrizione.";
@@ -16,9 +17,25 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
   const inputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [date, setDate] = useState(certificate?.expiresAt || "");
+  const [formError, setFormError] = useState(null);
 
   const effectiveStatus = certificate?.status || "missing";
   const statusMeta = useMemo(() => statusConfig[effectiveStatus] || statusConfig.missing, [effectiveStatus]);
+
+   const todayStr = useMemo(() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
+
+  const updateDate = useCallback((newDate) => {
+    setDate(newDate);
+    console.log("Date updated to:", newDate);
+    setFormError(null);
+  }, [locked, onChange, toast]);
 
   const handleFile = useCallback(async (file) => {
     if (locked) return;
@@ -37,15 +54,10 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
     data.append("file", file);
     setUploading(true);
     try {
-      const res = await fetch("/api/medical-certificate", {
-        method: "POST",
-        body: data,
-      });
-      if (!res.ok) {
-        const body = await safeJson(res);
-        throw new Error(body?.error || "Upload non riuscito.");
+      const payload = await uploadMedicalCertificate(data);
+      if (!payload.ok) {
+        throw new Error(payload.error || "Errore sconosciuto durante l'upload.");
       }
-      const payload = await res.json();
       onChange?.(payload);
       toast.success("Certificato caricato correttamente.");
     } catch (error) {
@@ -60,12 +72,7 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
     if (locked) return;
     setUploading(true);
     try {
-      const res = await fetch("/api/medical-certificate", { method: "DELETE" });
-      if (!res.ok) {
-        const body = await safeJson(res);
-        throw new Error(body?.error || "Impossibile eliminare il certificato.");
-      }
-      const payload = await res.json();
+      const payload = await deleteMedicalCertificate();
       onChange?.(payload);
       toast.info("Certificato rimosso.");
     } catch (error) {
@@ -75,7 +82,22 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
     }
   }, [locked, onChange, toast]);
 
-  const handleConfirmClick = useCallback(async () => {
+  const handleConfirmClick = useCallback(async (e) => {
+    e.preventDefault();
+    //check if date is valid and after today
+    setFormError(null);
+    if (!date) {
+      setFormError("Inserisci una data di scadenza valida.");
+      return;
+    }
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (selectedDate < today) {
+      setFormError("La data di scadenza deve essere oggi o successiva.");
+      return;
+    }
+
     if (ALLOW_FAKE_UPLOAD) {
       onChange?.({
         ...(certificate || {}),
@@ -93,11 +115,11 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
     if (!onConfirmCertificate) return;
     setUploading(true);
     try {
-      await onConfirmCertificate();
+      await onConfirmCertificate({expiresAt: date});
     } finally {
       setUploading(false);
     }
-  }, [ALLOW_FAKE_UPLOAD, certificate, onChange, onConfirmCertificate, toast]);
+  }, [ALLOW_FAKE_UPLOAD, certificate, onChange, onConfirmCertificate, toast, date]);
 
   const simulateUpload = useCallback(() => {
     if (!ALLOW_FAKE_UPLOAD || locked) return;
@@ -119,6 +141,7 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
   const disabled = locked || busy;
   const helperText = locked ? LOCKED_HINT : (certificate?.status === "uploaded" ? POST_UPLOAD_HINT : PRE_LOCK_HINT);
 
+
   return (
     <div className={styles.card} aria-live="polite">
       {ALLOW_FAKE_UPLOAD && (
@@ -132,8 +155,8 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
         </div>
         <span className={`${styles.badge} ${styles[statusMeta.tone]}`}>{statusMeta.label}</span>
       </header>
-
-      {certificate?.fileName && (
+      <form onSubmit={handleConfirmClick}>
+      {certificate?.downloadUrl && (
         <div className={styles.fileInfo}>
           <div>
             <strong>{certificate.fileName}</strong>
@@ -141,25 +164,24 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
           </div>
           <div className={styles.fileActions}>
             {certificate.downloadUrl && (
-              <a className="button ghost" href={certificate.downloadUrl} target="_blank" rel="noreferrer">
+            <a className="button ghost" href={certificate.downloadUrl} target="_blank" rel="noreferrer" disabled={disabled || uploading}>
                 Scarica
               </a>
             )}
             {!locked && (
-              <button className="button secondary" onClick={handleDelete} disabled={disabled}>
-                Rimuovi
+              <button className="button secondary" onClick={handleDelete} disabled={disabled || uploading}>
+                {uploading ? "Attendi..." : "Rimuovi"}
               </button>
             )}
             {!locked && canLock && (
-              <button className="button" onClick={handleConfirmClick} disabled={disabled}>
+              <button className="button" type="submit" disabled={disabled || uploading}>
                 {ALLOW_FAKE_UPLOAD ? "Conferma simulata" : "Conferma certificato"}
               </button>
             )}
           </div>
         </div>
       )}
-
-      <div
+      {!certificate?.downloadUrl &&<div
         className={[styles.dropzone, dragActive ? styles.dropzoneActive : "", disabled ? styles.dropzoneDisabled : ""].join(" ")}
         onDragOver={(e) => {
           e.preventDefault();
@@ -204,7 +226,7 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
           onChange={(e) => handleFile(e.target.files?.[0])}
           disabled={disabled}
         />
-      </div>
+      </div>}
 
       {helperText && (
         <p className={styles.lockedMessage}>{helperText}</p>
@@ -212,6 +234,13 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
       {ALLOW_FAKE_UPLOAD && (
         <p className={styles.demoNote}>Operazioni simulate, nessun dato viene inviato al server.</p>
       )}
+       <div style={{ height: "10px" }}></div>
+      <label className={styles.fieldSpaced} >
+        <span className="h2">Scadenza certificato medico</span>
+        <input key="date-input" className="input" type="date" min={todayStr} value={date} onChange={(e)=>updateDate(e.target.value)} required />
+        {formError && <span className={styles.error}>{formError}</span>}
+      </label>
+      </form>
     </div>
   );
 }
@@ -244,3 +273,4 @@ function formatSize(bytes) {
   }
   return `${mb.toFixed(1)} MB`;
 }
+

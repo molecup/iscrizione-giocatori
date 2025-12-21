@@ -6,10 +6,12 @@ import RegisterForm from "@app/components/RegisterForm";
 import PaymentButton from "@app/components/PaymentButton";
 import styles from "./page.module.css";
 import { useToast } from "@app/components/ToastProvider";
-import { getUserData, updateSinglePlayer, submitRegistration, sendVerificationEmail, confirmMedicalCertificate } from "@app/lib/api";
+import { getUserData, updateSinglePlayer, submitRegistration, sendVerificationEmail, confirmMedicalCertificate, deleteMedicalCertificate } from "@app/lib/api";
 import { useRouter } from "next/navigation";
 import { getUserPermissions } from "@app/lib/auth";
 import MedicalCertificateUpload from "@app/components/MedicalCertificateUpload";
+import Modal from "@app/components/Modal";
+
 
 const ALLOW_FAKE_CERT = process.env.NEXT_PUBLIC_ALLOW_FAKE_MED_CERT === "true";
 
@@ -46,6 +48,8 @@ export default function RegisterPage() {
   const [hasAcceptedFinalLock, setHasAcceptedFinalLock] = useState(false);
   const [finalConsentError, setFinalConsentError] = useState("");
   const [certificate, setCertificate] = useState(null);
+  const [deleteMedicalCertificateDialog, setDeleteMedicalCertificateDialog] = useState(false);
+  const [deletingCertificate, setDeletingCertificate] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState("pending");
   const [paymentMessage, setPaymentMessage] = useState("");
   const certificateStatus = certificate?.status || "missing";
@@ -282,7 +286,7 @@ export default function RegisterPage() {
     }
   };
 
-  const handleConfirmCertificate = useCallback(async () => {
+  const handleConfirmCertificate = useCallback(async (data) => {
     if (ALLOW_FAKE_CERT) {
       setCertificate((prev) => ({
         ...(prev || {}),
@@ -296,7 +300,10 @@ export default function RegisterPage() {
       return;
     }
     try {
-      const payload = await confirmMedicalCertificate();
+      const payload = await confirmMedicalCertificate(data);
+      if (!payload.ok) {
+        throw new Error(payload.error || "Errore sconosciuto durante la conferma.");
+      }
       setCertificate(payload);
       toast.success("Certificato confermato correttamente.");
     } catch (error) {
@@ -304,6 +311,25 @@ export default function RegisterPage() {
       throw error;
     }
   }, [ALLOW_FAKE_CERT, toast]);
+
+  const handleDeleteCertificate = async (e) => {
+    e.preventDefault();
+    setDeletingCertificate(true);
+    try {
+      const payload = await deleteMedicalCertificate();
+      if (!payload.ok) {
+        throw new Error(payload.error || "Errore sconosciuto durante la rimozione.");
+      }
+      setCertificate(payload);
+      toast.success("Certificato rimosso.");
+    } catch (error) {
+      toast.error(error.message || "Errore nella rimozione del certificato.");
+    }
+    finally {      
+      setDeleteMedicalCertificateDialog(false);
+      setDeletingCertificate(false);
+    }
+  }
 
   if (loadingPrefill) {
     return (
@@ -403,13 +429,16 @@ export default function RegisterPage() {
               ) : (
                 <div className={styles.certificateSummary}>
                   <h4>Certificato medico caricato</h4>
-                  <p>Caricato il {certificate?.uploadedAt ? new Date(certificate.uploadedAt).toLocaleDateString("it-IT") : "-"}.</p>
+                  <p>Il tuo certificato sarà valido fino al {certificate?.expiresAt ? new Date(certificate.expiresAt).toLocaleDateString("it-IT") : "-"}</p>
                   {certificate?.fileName && <p>File: {certificate.fileName}</p>}
-                  {certificate?.downloadUrl && 
+                  {/* {certificate?.downloadUrl && 
                     <div className={styles.resendLink}>
                        <a href={certificate.downloadUrl} target="_blank" rel="noreferrer" className="button secondary">Scarica certificato</a>
                     </div>
-                  }
+                  } */}
+                  <div className={styles.resendLink}>
+                  <a className="button secondary" onClick={() => setDeleteMedicalCertificateDialog(true)}>Elimina certificato</a>
+                </div>
                 </div>
               )}
             </div>}
@@ -431,7 +460,7 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <h3>Conferma definitiva dei dati</h3>
-                  <p className={styles.subtitle}>Una volta confermato non potrai più modificare le informazioni inserite né sostituire il certificato medico.</p>
+                  <p className={styles.subtitle}>Una volta confermato non potrai più modificare le informazioni inserite.</p>
                   <label className={styles.consentCheckbox}>
                     <input
                       type="checkbox"
@@ -503,6 +532,10 @@ export default function RegisterPage() {
           </div>
         )}
       </div>
+      <Modal open={!!deleteMedicalCertificateDialog} onClose={()=> { if(!deletingCertificate) setDeleteMedicalCertificateDialog(null) }} title="Elimina certificato"
+             actions={<button className="button" onClick={handleDeleteCertificate} disabled={deletingCertificate}>{deletingCertificate ? "Attendi..." : "Elimina"}</button>}>
+        <p>Sei sicuro di voler eliminare questo certificato? Se lo elimini dovrai caricarlo di nuovo.</p>
+      </Modal>
     </div>
   );
 }
