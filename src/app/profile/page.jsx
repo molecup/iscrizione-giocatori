@@ -477,6 +477,8 @@ export default function RegisterPage() {
                   amount={price}
                   customerEmail={data.email}
                   disabled={!backDisabled || confirmingSession}
+                  productName="Quota iscrizione"
+                  productDescription="Pagamento quota iscrizione giocatore"
                   metadata={{
                     nome: data.nome,
                     cognome: data.cognome,

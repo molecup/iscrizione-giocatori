@@ -7,6 +7,7 @@ import Modal from "@app/components/Modal";
 import {getPlayers, updatePlayers, requestRemovalApi, registerPlayerForManager, submitPlayerList} from "@app/lib/api";
 import { useToast } from "@app/components/ToastProvider";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getUserPermissions } from "@app/lib/auth";
 
 export default function DashboardPage() {
@@ -180,6 +181,16 @@ export default function DashboardPage() {
       </div>}
 
       <PlayerTable players={players} setPlayers={setPlayers} onRequestRemoval={requestRemoval} hidePayment={hidePayment} locked={submitted} />
+
+      {!submitted && <div className={styles.header + " card"}>
+        <div>
+          <h3>Maglie Staff</h3>
+          <p className={styles.muted}>Richiedi le maglie personalizzate per i membri dello staff della tua squadra.</p>
+        </div>
+        <div className={styles.actions}>
+          <Link href="/staff-jerseys" className="button secondary">Vai a richieste maglie</Link>
+        </div>
+      </div>}
 
       {!submitted && <div className={styles.header + " card"}>
         <div>

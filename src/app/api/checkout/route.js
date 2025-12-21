@@ -1,6 +1,21 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 
+const ALLOWED_AMOUNTS_CENTS = new Set([2500, 4000]);
+
+function sanitizeText(value, { max = 200 } = {}) {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  // Remove control chars/new lines that can cause issues in Stripe UI/logs
+  const cleaned = trimmed.replace(/[\u0000-\u001F\u007F]/g, " ").replace(/\s+/g, " ");
+  return cleaned.slice(0, max);
+}
+
+function isPlainObject(value) {
+  return value != null && typeof value === "object" && !Array.isArray(value);
+}
+
 export async function POST(request) {
   try {
     const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -10,21 +25,32 @@ export async function POST(request) {
 
     const stripe = new Stripe(secretKey);
 
-    // Body: { amount: number (in cents), currency?: string, metadata?: object }
+    // Body: { amount: number (in cents), currency?: string, metadata?: object, product_name?: string, product_description?: string }
     let body = {};
     try {
       body = await request.json();
     } catch (_) {
       body = {};
     }
-    const amount = Number(body?.amount) || 60; // default 50.00€
-    const currency = (body?.currency || "eur").toLowerCase();
-    const metadata = (body && body.metadata) || undefined;
-    const customerEmail = typeof body?.customer_email === "string" ? body.customer_email : undefined;
 
-    if (!Number.isFinite(amount) || amount <= 0) {
+    const amountCents = Number(body?.amount);
+    if (!Number.isFinite(amountCents) || !Number.isInteger(amountCents) || amountCents <= 0) {
       return NextResponse.json({ error: "Importo non valido" }, { status: 400 });
     }
+    if (!ALLOWED_AMOUNTS_CENTS.has(amountCents)) {
+      return NextResponse.json({ error: "Importo non consentito" }, { status: 400 });
+    }
+
+    const currency = (body?.currency || "eur").toLowerCase();
+    if (currency !== "eur") {
+      return NextResponse.json({ error: "Valuta non supportata" }, { status: 400 });
+    }
+
+    const metadata = isPlainObject(body?.metadata) ? body.metadata : undefined;
+    const customerEmail = typeof body?.customer_email === "string" ? body.customer_email : undefined;
+
+    const productName = sanitizeText(body?.product_name, { max: 120 }) || "Quota iscrizione";
+    const productDescription = sanitizeText(body?.product_description, { max: 400 }) || "Pagamento";
 
     // Build success/cancel URLs trying to return to the register page with token
     const url = new URL(request.url);
@@ -47,10 +73,10 @@ export async function POST(request) {
           quantity: 1,
           price_data: {
             currency,
-            unit_amount: Math.round(amount),
+            unit_amount: amountCents,
             product_data: {
-              name: "Quota iscrizione",
-              description: "Pagamento iscrizione giocatore",
+              name: productName,
+              description: productDescription,
             },
           },
         },
