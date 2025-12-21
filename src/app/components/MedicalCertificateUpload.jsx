@@ -50,11 +50,11 @@ export default function MedicalCertificateUpload({ certificate, onChange, locked
       return;
     }
 
-    const data = new FormData();
-    data.append("file", file);
+    // const data = new FormData();
+    // data.append("file", file);
     setUploading(true);
     try {
-      const payload = await uploadMedicalCertificate(data);
+      const payload = await uploadMedicalCertificate({file: file});
       if (!payload.ok) {
         throw new Error(payload.error || "Errore sconosciuto durante l'upload.");
       }

@@ -1,14 +1,6 @@
 "use server"
 import {verifySession, addPlayerIdToSession} from "@app/lib/sessions";
-import path from "path";
-import { promises as fs, stat } from "fs";
-
-
-// import { register } from "next/dist/next-devtools/userspace/pages/pages-dev-overlay-setup";
-import {
-  FILES_DIR,
-  getRecord,
-} from "@app/api/medical-certificate/utils";
+import { randomUUID } from "crypto";
 
 export async function getTeamApi() {
   await delay(400);
@@ -389,12 +381,15 @@ export async function getMedicalCertificate() {
     return { ok: true, ...api2frontendMedicalCertificate(await res.json())};
 }
 
-export async function uploadMedicalCertificate(formData) {
+export async function uploadMedicalCertificate(data) {
     const session = await verifySession();
     if (!session.playerId) {
         return { ok: false, error: "Permessi insufficienti" };
     }
-
+    const formData = new FormData();
+    // rename filename to include player id to avoid conflicts
+    const renamedFile = new File([data.file], `${session.playerId}-${randomUUID()}.pdf`, { type: data.file.type });
+    formData.append("file", renamedFile);
     formData.append("player", session.playerId)
 
     const request = process.env.API_URL_BASE + "/registration/medical-certificates/";
