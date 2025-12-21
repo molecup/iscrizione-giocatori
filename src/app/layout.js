@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Iscrizione giocatori — Lega Cittadina",
+  title: "Iscrizione giocatori",
   description: "Frontend minimal Next.js per gestione squadre e registrazione giocatori.",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default async function RootLayout({ children }) {
