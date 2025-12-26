@@ -76,7 +76,7 @@ export default function Header({ user_permissions }) {
                     {!user_permissions?.isAuth && <Link href="/login" className={styles.link} onClick={handleNavClick}>Login</Link>}
                     {user_permissions?.isPlayer && <Link href="/profile" className={styles.link} onClick={handleNavClick}>Profile</Link>}
                     {user_permissions?.isManager && <Link href="/dashboard" className={styles.link} onClick={handleNavClick}>Dashboard</Link>}
-                    {user_permissions?.isManager && <Link href="/staff-jerseys" className={styles.link} onClick={handleNavClick}>Maglie Staff</Link>}
+                    {user_permissions?.isManager && false && <Link href="/staff-jerseys" className={styles.link} onClick={handleNavClick}>Maglie Staff</Link>}
                     <Link href="/privacy" className={styles.link} onClick={handleNavClick}>Privacy</Link>
                     {user_permissions?.isAuth && <Link href="/login" className={styles.link} onClick={(e) => { handle_logout(e); handleNavClick(); }}>Log Out</Link>}
 

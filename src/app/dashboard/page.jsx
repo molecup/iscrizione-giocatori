@@ -182,7 +182,7 @@ export default function DashboardPage() {
 
       <PlayerTable players={players} setPlayers={setPlayers} onRequestRemoval={requestRemoval} hidePayment={hidePayment} locked={submitted} />
 
-      {!submitted && <div className={styles.header + " card"}>
+      {!submitted && false && <div className={styles.header + " card"}>
         <div>
           <h3>Maglie Staff</h3>
           <p className={styles.muted}>Richiedi le maglie personalizzate per i membri dello staff della tua squadra.</p>
