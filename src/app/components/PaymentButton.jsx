@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const ALLOWED_AMOUNTS_EUR = new Set([25, 40]);
 
-export default function PaymentButton({ amount = 25, customerEmail, metadata, disabled = false, productName, productDescription, label }) {
+export default function PaymentButton({ amount = 25, customerEmail, metadata, disabled = false, productName, productDescription, label, backendMetadata = {} }) {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -37,6 +37,7 @@ export default function PaymentButton({ amount = 25, customerEmail, metadata, di
           metadata,
           product_name: productName,
           product_description: productDescription,
+          backend_metadata: backendMetadata,
         }),
       });
       const data = await resp.json();

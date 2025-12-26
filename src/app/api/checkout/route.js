@@ -89,6 +89,24 @@ export async function POST(request) {
       metadata,
     });
 
+    // Post payment on backend
+    const requestBackend = process.env.API_URL_BASE +"/registration/payment-transactions/"
+    const res = await fetch(requestBackend, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          session_id: session.id,
+          ...body.backend_metadata,
+        }),
+      });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      return NextResponse.json({ error: "Errore nella creazione del pagamento: " + errorMessage }, { status: 500 });
+    }
+
     return NextResponse.json({ id: session.id, url: session.url });
   } catch (err) {
     console.error("Stripe checkout error", err);

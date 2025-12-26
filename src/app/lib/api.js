@@ -30,7 +30,7 @@ function api2frontendPlayerList(data) {
             numero: p.shirt_number || "",
             taglia: p.shirt_size || "",
             posizione: p.position || "",
-            pagato:  false, // Placeholder, da implementare TODO
+            pagato:  p.paid, // Placeholder, da implementare TODO
             confermato: p.registration_status === "SUB",
         }))
     };
@@ -290,6 +290,8 @@ export async function getUserData() {
             is_complete: data.registration_status === "SUB" || data.registration_status === "EDIT",
             email_verified: data.email_verified,
             medical_certificate: api2frontendMedicalCertificate(data.medical_certificate),
+            payment_status: data.payed ? "paid" : "pending",
+            playerId: data.id,
         }
     };
 }

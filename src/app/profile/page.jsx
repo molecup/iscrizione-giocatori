@@ -52,6 +52,7 @@ export default function RegisterPage() {
   const [deletingCertificate, setDeletingCertificate] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState("pending");
   const [paymentMessage, setPaymentMessage] = useState("");
+  const [playerId, setPlayerId] = useState(null);
   const certificateStatus = certificate?.status || "missing";
   const certificateLockedManually = certificate?.locked === true;
   const canLockCertificate = certificateStatus === "uploaded" && !certificateLockedManually;
@@ -146,6 +147,7 @@ export default function RegisterPage() {
         if (userData.info.is_complete) {
           setStep("summary");
         }
+        setPlayerId(userData.info.playerId || null);
         setBackDisabled(!userData.info.can_edit);
         setCertificate(userData.info.medical_certificate || { status: "missing" });
       } catch (error) {
@@ -517,6 +519,10 @@ export default function RegisterPage() {
                     nome: data.nome,
                     cognome: data.cognome,
                     cf: data.cf,
+                  }}
+                  backendMetadata={{
+                    player_id: playerId,
+                    scope: "PLAYER_REGISTRATION_FEE",
                   }}
                 />
               )}

@@ -22,11 +22,14 @@ export async function POST(request) {
       return NextResponse.json({ error: "session_id mancante" }, { status: 400 });
     }
 
+
     const session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ["payment_intent"] });
+
 
     if (!session || session.payment_status !== "paid") {
       return NextResponse.json({ status: session?.payment_status || "unknown" }, { status: 409 });
     }
+
 
     return NextResponse.json({
       id: session.id,
