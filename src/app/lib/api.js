@@ -459,7 +459,6 @@ export async function changeUserEmail(newEmail) {
     if (!session.playerId) {
         return { ok: false, error: "Permessi insufficienti" };
     }
-    console.log("Changing email to ", newEmail);
     const request = process.env.API_URL_BASE + `/registration/change-player-mail/`;
     const res = await fetch(request, {
         method: "POST",
