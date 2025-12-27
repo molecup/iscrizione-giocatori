@@ -454,4 +454,25 @@ export async function confirmMedicalCertificate(data) {
     return { ok: true, ...api2frontendMedicalCertificate(resData) };
 }
 
-
+export async function changeUserEmail(newEmail) {
+    const session = await verifySession();
+    if (!session.playerId) {
+        return { ok: false, error: "Permessi insufficienti" };
+    }
+    console.log("Changing email to ", newEmail);
+    const request = process.env.API_URL_BASE + `/registration/change-player-mail/`;
+    const res = await fetch(request, {
+        method: "POST",
+        headers: {
+            'Authorization': 'Bearer ' + session.token,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ new_email: newEmail }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      const errorMessage = Object.values(err).flat().join(", ");
+      return { ok: false, error: errorMessage || "Errore sconosciuto" };
+    }
+    return { ok: true };
+}

@@ -6,7 +6,7 @@ import RegisterForm from "@app/components/RegisterForm";
 import PaymentButton from "@app/components/PaymentButton";
 import styles from "./page.module.css";
 import { useToast } from "@app/components/ToastProvider";
-import { getUserData, updateSinglePlayer, submitRegistration, sendVerificationEmail, confirmMedicalCertificate, deleteMedicalCertificate } from "@app/lib/api";
+import { getUserData, updateSinglePlayer, submitRegistration, sendVerificationEmail, confirmMedicalCertificate, deleteMedicalCertificate, changeUserEmail } from "@app/lib/api";
 import { useRouter } from "next/navigation";
 import { getUserPermissions } from "@app/lib/auth";
 import MedicalCertificateUpload from "@app/components/MedicalCertificateUpload";
@@ -53,6 +53,12 @@ export default function RegisterPage() {
   const [paymentStatus, setPaymentStatus] = useState("pending");
   const [paymentMessage, setPaymentMessage] = useState("");
   const [playerId, setPlayerId] = useState(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [newEmailConfirm, setNewEmailConfirm] = useState("");
+  const [newEmailError, setNewEmailError] = useState("");
+  const [newEmailFormState, setNewEmailFormState] = useState("hide");
+  const [reload, setReload] = useState(false);
+
   const certificateStatus = certificate?.status || "missing";
   const certificateLockedManually = certificate?.locked === true;
   const canLockCertificate = certificateStatus === "uploaded" && !certificateLockedManually;
@@ -156,7 +162,7 @@ export default function RegisterPage() {
         setLoadingPrefill(false);
       }
     })();
-  }, []);
+  }, [reload, toast]);
 
   // Handle return from Stripe (success/cancel)
   useEffect(() => {
@@ -333,6 +339,38 @@ export default function RegisterPage() {
     }
   }
 
+  const handleChangeEmail = async (e) => {
+    e.preventDefault();
+    setNewEmailFormState("loading");
+    setNewEmailError("");
+    const newEmailTrimmed = newEmail.trim().toLocaleLowerCase();
+    const newEmailConfirmTrimmed = newEmailConfirm.trim().toLocaleLowerCase();
+    try {
+      if (!newEmailTrimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmailTrimmed)) {
+        setNewEmailError("Inserisci una email valida.");
+        setNewEmailFormState("show");
+        return;
+      }
+      if (newEmailTrimmed !== newEmailConfirmTrimmed) {
+        setNewEmailError("Le email non corrispondono.");
+        setNewEmailFormState("show");
+        return;
+      }
+      const resp = await changeUserEmail(newEmailTrimmed);
+      if (!resp.ok) {
+        throw new Error(resp.error || "Errore sconosciuto");
+      }
+      toast.success("Email cambiata con successo. Verifica la nuova email per completare il cambio.");
+      setNewEmail("");
+      setNewEmailConfirm("");
+      setNewEmailFormState("hide");
+      setReload(!reload);
+    } catch (error) {
+      setNewEmailError(error.message || "Errore nel cambio email.");
+      setNewEmailFormState("show");
+    }
+  };
+
   if (loadingPrefill) {
     return (
       <div className={styles.wrapper}>
@@ -451,6 +489,9 @@ export default function RegisterPage() {
                 <p>Per confermare devi aprire il link ricevuto via email. Al termine potrai proseguire con il pagamento.</p>
                 <div className={styles.resendLink}>
                   <a href="/verify-email-resend" className="button secondary" onClick={handleResendVerification}>Reinvia email di verifica</a>
+                  <a className="button secondary" style={{marginLeft: "5px"}} onClick={() => setNewEmailFormState("show")}>Modifica email</a>
+                </div>
+                <div className={styles.resendLink}>
                 </div>
               </div>
             )}
@@ -541,6 +582,43 @@ export default function RegisterPage() {
       <Modal open={!!deleteMedicalCertificateDialog} onClose={()=> { if(!deletingCertificate) setDeleteMedicalCertificateDialog(null) }} title="Elimina certificato"
              actions={<button className="button" onClick={handleDeleteCertificate} disabled={deletingCertificate}>{deletingCertificate ? "Attendi..." : "Elimina"}</button>}>
         <p>Sei sicuro di voler eliminare questo certificato? Se lo elimini dovrai caricarlo di nuovo.</p>
+      </Modal>
+
+      <Modal open={newEmailFormState !== "hide"} 
+        onClose={() => { if (newEmailFormState !== "loading") setNewEmailFormState("hide") }} 
+        title="Cambia email"
+        actions={
+          <button className="button" type="submit" form="changeEmailForm" disabled={newEmailFormState === "loading"} onClick={handleChangeEmail}>
+            {newEmailFormState === "loading" ? "Invio in corso..." : "Cambia email"}
+          </button>
+        }>
+          <span className={styles.subtitle}>Sei sicuro di voler cambiare la tua email? Se procedi con la modifica dovrai utilizzare la nuova email per accedere al tuo profilo. Riceverai una email di verifica al nuovo indirizzo.</span>
+          <div style={{ height: "12px" }}/>
+          <div className={styles.field}>
+            <label>Nuova email</label>
+            <input
+              type="email"
+              id="newEmail"
+              className="input"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              disabled={newEmailFormState === "loading" || newEmailFormState === "hide"}
+              required
+            />
+          </div>
+          <div className={styles.field}>
+            <label >Conferma nuova email</label>
+            <input
+              type="email"
+              id="newEmailConfirm"
+              className="input"
+              value={newEmailConfirm}
+              onChange={(e) => setNewEmailConfirm(e.target.value)}
+              disabled={newEmailFormState === "loading" || newEmailFormState === "hide"}
+              required
+            />
+          </div>
+          {newEmailError && <p className={styles.error}>{newEmailError}</p>}
       </Modal>
     </div>
   );

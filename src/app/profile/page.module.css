@@ -57,6 +57,7 @@
 .paymentCalloutSuccess .paymentEyebrow { color:inherit; opacity:0.85; }
 .paymentCalloutAmount span { display:block; font-size:13px; color:inherit; opacity:0.7; }
 .paymentCalloutAmount strong { font-size:28px; line-height:1.2; color:inherit; }
+.field { display: flex; flex-direction: column; gap: 6px; }
 @media (max-width:640px){
   .wrapper {
     padding: 6px 6px;
