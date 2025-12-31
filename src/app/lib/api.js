@@ -30,7 +30,7 @@ function api2frontendPlayerList(data) {
             numero: p.shirt_number || "",
             taglia: p.shirt_size || "",
             posizione: p.position || "",
-            pagato:  p.paid, // Placeholder, da implementare TODO
+            pagato:  p.payed, // Placeholder, da implementare TODO
             confermato: p.registration_status === "SUB",
         }))
     };
