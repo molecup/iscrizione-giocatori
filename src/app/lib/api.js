@@ -348,7 +348,7 @@ export async function submitPlayerList(){
             'Authorization': 'Bearer ' + session.token,
         },
     });
-    console.log(res);
+    // console.log(res);
     if (!res.ok) {
       const err = await res.json();
       const errorMessage = Object.values(err).flat().join(", ");
