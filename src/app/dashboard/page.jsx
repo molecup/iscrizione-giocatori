@@ -98,8 +98,8 @@ export default function DashboardPage() {
   const handleSubmitList = async (e) => {
     e.preventDefault();
     const playerNum = players.filter((p) => p.confermato).length
-    if (playerNum < 22) {
-      toast.error("Devi avere almeno 22 iscrizioni complete per inviare la conferma definitiva.");
+    if (playerNum < 11) {
+      toast.error("Devi avere almeno 11 iscrizioni complete per inviare la conferma definitiva.");
       setShowSubmitConfirm(false);
       return;
     }
