@@ -86,6 +86,7 @@ export async function POST(request) {
       allow_promotion_codes: true,
       locale: "it",
       customer_email: customerEmail,
+      billing_address_collection: "required",
       metadata,
     });
 
