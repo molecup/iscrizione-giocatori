@@ -3,7 +3,7 @@ import styles from "./PaymentButton.module.css";
 import { useToast } from "./ToastProvider";
 import { useState } from "react";
 
-const ALLOWED_AMOUNTS_EUR = new Set([25, 40]);
+const ALLOWED_AMOUNTS_EUR = new Set([25, 40, 20, 35]);
 
 export default function PaymentButton({ amount = 25, customerEmail, metadata, disabled = false, productName, productDescription, label, backendMetadata = {} }) {
   const toast = useToast();
@@ -20,10 +20,10 @@ export default function PaymentButton({ amount = 25, customerEmail, metadata, di
         toast.error("Importo non valido");
         return;
       }
-      if (!ALLOWED_AMOUNTS_EUR.has(Math.round(amountEur))) {
-        toast.error("Importo non supportato. Ammessi: 25€ o 40€.");
-        return;
-      }
+      // if (!ALLOWED_AMOUNTS_EUR.has(Math.round(amountEur))) {
+      //   toast.error("Importo non supportato. Ammessi: 25€, 40€ o 20€, 35€.");
+      //   return;
+      // }
 
       setLoading(true);
 

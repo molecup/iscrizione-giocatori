@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 
-const ALLOWED_AMOUNTS_CENTS = new Set([2500, 4000]);
+const ALLOWED_AMOUNTS_CENTS = new Set([2500, 4000, 2000]);
 
 function sanitizeText(value, { max = 200 } = {}) {
   if (typeof value !== "string") return undefined;
@@ -37,9 +37,9 @@ export async function POST(request) {
     if (!Number.isFinite(amountCents) || !Number.isInteger(amountCents) || amountCents <= 0) {
       return NextResponse.json({ error: "Importo non valido" }, { status: 400 });
     }
-    if (!ALLOWED_AMOUNTS_CENTS.has(amountCents)) {
-      return NextResponse.json({ error: "Importo non consentito" }, { status: 400 });
-    }
+    // if (!ALLOWED_AMOUNTS_CENTS.has(amountCents)) {
+    //   return NextResponse.json({ error: "Importo non consentito" }, { status: 400 });
+    // }
 
     const currency = (body?.currency || "eur").toLowerCase();
     if (currency !== "eur") {
